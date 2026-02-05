@@ -211,11 +211,10 @@ const NAV_ITEMS = [
       const targetProjectId = projectIdOverride || projectIdFromPath;
       const base = targetProjectId
         ? query(
-            collectionGroup(db, "months"),
-            where("projectId", "==", targetProjectId),
-            where("userId", "==", userId)
+            collection(db, "accounting_hours", userId, "months"),
+            where("projectId", "==", targetProjectId)
           )
-        : query(collectionGroup(db, "months"), where("userId", "==", userId));
+        : query(collection(db, "accounting_hours", userId, "months"));
       const q = mode === "month" ? query(base, where("month", "==", monthKey)) : base;
       const snap = await getDocs(q);
       let total = 0;
