@@ -211,6 +211,12 @@ function ChatTab({
   const [messages, setMessages] = useState<any[]>([]);
   const [pinned, setPinned] = useState<any[]>([]);
   const [text, setText] = useState("");
+  const [userNames, setUserNames] = useState<Record<string, string>>({});
+  const [userAvatars, setUserAvatars] = useState<Record<string, string>>({});
+  const [brokenAvatars, setBrokenAvatars] = useState<Record<string, boolean>>({});
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  const isAtBottomRef = useRef(true);
+  const initialLoadRef = useRef(true);
 
   useEffect(() => {
     const q = query(
@@ -219,6 +225,14 @@ function ChatTab({
     );
     return safeOnSnapshot(q, (snap) => {
       setMessages(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+      requestAnimationFrame(() => {
+        const el = chatScrollRef.current;
+        if (!el) return;
+        if (initialLoadRef.current || isAtBottomRef.current) {
+          el.scrollTop = el.scrollHeight;
+          initialLoadRef.current = false;
+        }
+      });
     });
   }, [projectId]);
 
@@ -232,10 +246,39 @@ function ChatTab({
     });
   }, [projectId]);
 
+  useEffect(() => {
+    const ids = new Set<string>();
+    messages.forEach((m) => {
+      if (m.senderId) ids.add(String(m.senderId));
+    });
+    if (ids.size === 0) {
+      setUserNames({});
+      setUserAvatars({});
+      return;
+    }
+    const q = query(collection(db, "users_public"), where("__name__", "in", Array.from(ids).slice(0, 10)));
+    return safeOnSnapshot(q, (snap) => {
+      const names: Record<string, string> = {};
+      const avatars: Record<string, string> = {};
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() as any;
+        names[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
+        const avatar = data?.photoURL ?? data?.avatarUrl ?? data?.avatar ?? null;
+        if (avatar) avatars[docSnap.id] = avatar;
+      });
+      setUserNames(names);
+      setUserAvatars(avatars);
+    });
+  }, [messages]);
+
   async function sendMessage() {
     const clean = text.trim();
     if (!clean) return;
     setText("");
+    requestAnimationFrame(() => {
+      const el = chatScrollRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
     await addDoc(collection(db, "project_chats", projectId, "messages"), {
       text: clean,
       senderId: currentUserId,
@@ -277,7 +320,16 @@ function ChatTab({
       )}
 
       <div className="panel motion p-6">
-        <div className="chat-area rounded-2xl border border-white/10 bg-white/5 p-4 h-[360px] overflow-y-auto hide-scrollbar">
+        <div
+          className="chat-area rounded-2xl border border-white/10 bg-white/5 p-4 h-[360px] overflow-y-auto hide-scrollbar"
+          ref={chatScrollRef}
+          onScroll={() => {
+            const el = chatScrollRef.current;
+            if (!el) return;
+            const threshold = 24;
+            isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+          }}
+        >
           {messages.length === 0 && (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
               Пока нет сообщений в этом чате.
@@ -292,12 +344,23 @@ function ChatTab({
                 return (
                   <div key={m.id ?? index} className={`chat-row group flex items-start gap-3${isMine ? " is-mine" : ""}`}>
                     {!isMine && !isSameSender && (
-                      <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
+                      <>
+                        {userAvatars[m.senderId ?? ""] && !brokenAvatars[m.senderId ?? ""] ? (
+                          <img
+                            src={userAvatars[m.senderId ?? ""]}
+                            alt=""
+                            className="h-9 w-9 rounded-full object-cover"
+                            onError={() => setBrokenAvatars((prev) => ({ ...prev, [m.senderId ?? ""]: true }))}
+                          />
+                        ) : (
+                          <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
+                        )}
+                      </>
                     )}
                     <div className={`chat-bubble min-w-0${isSameSender ? " chat-bubble-compact" : ""}`}>
                       {!isMine && !isSameSender && (
                         <div className="mb-1 text-xs text-muted">
-                          <UserName userId={m.senderId} />
+                          {userNames[m.senderId ?? ""] ?? "Нет имени"}
                         </div>
                       )}
                       <div className="chat-text">{m.text ?? ""}</div>
