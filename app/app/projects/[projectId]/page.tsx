@@ -734,14 +734,6 @@ function PeopleTab({ projectId, projectName, isManager }: { projectId: string; p
   const [hoursValue, setHoursValue] = useState<number | null>(null);
 
 
-  const selectedMember = selectedId ? uniqueMembers.find((m) => m.userId === selectedId) : null;
-  const selectedRole = selectedMember
-    ? selectedMember.userId === ownerId
-      ? "руководитель"
-      : selectedMember.role === "admin"
-        ? "менеджер"
-        : "участник"
-    : "";
   const monthKey = useMemo(() => {
     const d = new Date();
     const m = (d.getMonth() + 1).toString().padStart(2, "0");
@@ -973,7 +965,7 @@ function PeopleTab({ projectId, projectName, isManager }: { projectId: string; p
               <button className="btn btn-outline" onClick={() => setProfileOpen(false)}>Закрыть</button>
             </div>
 
-            <div className="mt-6 grid gap-4">\r\n              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">\r\n                <div className="text-xs text-muted">Проект</div>\r\n                <div className="mt-1 text-sm">{projectName || projectId}</div>\r\n                <div className="mt-3 text-xs text-muted">Роль</div>\r\n                <div className="mt-1 text-sm">{selectedRole || "—"}</div>\r\n              </div>
+            <div className="mt-6 grid gap-4">              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">                <div className="text-xs text-muted">Проект</div>                <div className="mt-1 text-sm">{projectName || projectId}</div>                <div className="mt-3 text-xs text-muted">Роль</div>                <div className="mt-1 text-sm">{selectedRole || "—"}</div>              </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="text-xs text-muted">Отработано</div>
                 <div className="mt-2 flex items-center gap-2">
