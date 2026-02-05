@@ -343,7 +343,7 @@ function ChatTab({
                 const isSameSender = prev?.senderId && prev.senderId === m.senderId;
                 const avatarId = m.senderId ?? "";
                 const hasAvatar = userAvatars[avatarId] && !brokenAvatars[avatarId];
-                const showAvatar = !isSameSender && !isMine;
+                const showAvatar = !isSameSender;
                 return (
                   <div
                     key={m.id ?? index}
