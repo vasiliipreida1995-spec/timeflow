@@ -196,28 +196,6 @@ const NAV_ITEMS = [
     }
   }
     try {
-      const projectSnap = await getDoc(doc(db, "projects", projectIdFromPath));
-      const projectData = projectSnap.data() as any;
-      setProfileProjectName(projectData?.name ?? projectIdFromPath);
-      const ownerId = projectData?.ownerId ?? null;
-      if (ownerId && ownerId === userId) {
-        setProfileRole("руководитель");
-        return;
-      }
-      const memberSnap = await getDoc(doc(db, "project_members", `${projectIdFromPath}_${userId}`));
-      if (!memberSnap.exists()) {
-        setProfileRole("не в проекте");
-        return;
-      }
-      const role = (memberSnap.data() as any)?.role ?? "";
-      setProfileRole(role === "admin" ? "менеджер" : role === "worker" ? "участник" : role || "участник");
-    } catch {
-      setProfileProjectName(projectIdFromPath);
-      setProfileRole("");
-    }
-  }
-  async function loadHours(userId: string, mode: "month" | "all") {
-    try {
       if (!projectIdFromPath) {
         setProfileHours(0);
         return;
