@@ -43,7 +43,7 @@ const NAV_ITEMS = [
   const [profileHours, setProfileHours] = useState<number | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileProjectName, setProfileProjectName] = useState("");
+  const [profileProjectName, setProfileProjectName] = useState("");`n  const [profileProjectId, setProfileProjectId] = useState("");
   const [profileRole, setProfileRole] = useState("");
   useEffect(() => {
     let unsub: (() => void) | null = null;
@@ -153,34 +153,39 @@ const NAV_ITEMS = [
   }
 
   async function loadProjectContext(userId: string) {
+    let resolvedProjectId = "";
     try {
       if (projectIdFromPath) {
         const projectSnap = await getDoc(doc(db, "projects", projectIdFromPath));
         const projectData = projectSnap.data() as any;
         setProfileProjectName(projectData?.name ?? projectIdFromPath);
+        resolvedProjectId = projectIdFromPath;
+        setProfileProjectId(projectIdFromPath);
         const ownerId = projectData?.ownerId ?? null;
         if (ownerId && ownerId === userId) {
           setProfileRole("руководитель");
-          return;
+          return resolvedProjectId;
         }
         const memberSnap = await getDoc(doc(db, "project_members", `${projectIdFromPath}_${userId}`));
         if (!memberSnap.exists()) {
           setProfileRole("не в проекте");
-          return;
+          return resolvedProjectId;
         }
         const role = (memberSnap.data() as any)?.role ?? "";
         setProfileRole(role === "admin" ? "менеджер" : role === "worker" ? "участник" : role || "участник");
-        return;
+        return resolvedProjectId;
       }
 
       const memberSnap = await getDocs(query(collection(db, "project_members"), where("userId", "==", userId), limit(1)));
       if (memberSnap.empty) {
         setProfileProjectName("");
         setProfileRole("не в проекте");
-        return;
+        setProfileProjectId("");
+        return "";
       }
       const member = memberSnap.docs[0].data() as any;
       const projectId = member?.projectId ?? "";
+      resolvedProjectId = projectId;
       if (projectId) {
         const projectSnap = await getDoc(doc(db, "projects", projectId));
         const projectData = projectSnap.data() as any;
@@ -188,23 +193,27 @@ const NAV_ITEMS = [
       } else {
         setProfileProjectName("");
       }
+      setProfileProjectId(projectId);
       const role = member?.role ?? "";
       setProfileRole(role === "admin" ? "менеджер" : role === "worker" ? "участник" : role || "участник");
     } catch {
       setProfileProjectName(projectIdFromPath || "");
+      setProfileProjectId(projectIdFromPath || "");
       setProfileRole("");
     }
+    return resolvedProjectId;
   }
 
-  async function loadHours(userId: string, mode: "month" | "all") {
+  async function loadHours(userId: string, mode: "month" | "all", projectIdOverride?: string) {
     try {
-      if (!projectIdFromPath) {
+      const targetProjectId = projectIdOverride || projectIdFromPath;
+      if (!targetProjectId) {
         setProfileHours(0);
         return;
       }
       const base = query(
         collectionGroup(db, "months"),
-        where("projectId", "==", projectIdFromPath),
+        where("projectId", "==", targetProjectId),
         where("userId", "==", userId)
       );
       const q = mode === "month" ? query(base, where("month", "==", monthKey)) : base;
@@ -220,7 +229,7 @@ const NAV_ITEMS = [
     }
   }
 
-  function openProfile(user: { id: string; name: string; email: string; avatar?: string | null }) {
+    async function openProfile(user: { id: string; name: string; email: string; avatar?: string | null }) {
     setProfileUserId(user.id);
     setProfileName(user.name || "Нет имени");
     setProfileEmail(user.email || "Нет данных");
@@ -230,8 +239,8 @@ const NAV_ITEMS = [
     setProfileHours(null);
     setProfileOpen(true);
     loadProfile(user.id);
-    loadProjectContext(user.id);
-    loadHours(user.id, "month");
+    const resolvedProjectId = await loadProjectContext(user.id);
+    loadHours(user.id, "month", resolvedProjectId || projectIdFromPath || profileProjectId);
   }
   async function saveProfile() {
     if (!profileUserId) return;
@@ -456,7 +465,7 @@ const NAV_ITEMS = [
                     className={`btn btn-outline ${profileHoursMode === "month" ? "btn-primary" : ""}`}
                     onClick={() => {
                       setProfileHoursMode("month");
-                      if (profileUserId) loadHours(profileUserId, "month");
+                      if (profileUserId) loadHours(profileUserId, "month", profileProjectId || projectIdFromPath);
                     }}
                   >
                     За месяц
@@ -465,7 +474,7 @@ const NAV_ITEMS = [
                     className={`btn btn-outline ${profileHoursMode === "all" ? "btn-primary" : ""}`}
                     onClick={() => {
                       setProfileHoursMode("all");
-                      if (profileUserId) loadHours(profileUserId, "all");
+                      if (profileUserId) loadHours(profileUserId, "all", profileProjectId || projectIdFromPath);
                     }}
                   >
                     За всё время
