@@ -205,7 +205,7 @@ function ChatTab({
   isManager,
 }: {
   projectId: string;
-  currentuserId: string;
+  currentUserId: string;
   isManager: boolean;
 }) {
   const [messages, setMessages] = useState<any[]>([]);
@@ -218,7 +218,7 @@ function ChatTab({
       orderBy("createdAt", "asc")
     );
     return safeOnSnapshot(q, (snap) => {
-      setMessages(snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) })));
+      setMessages(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
     });
   }, [projectId]);
 
@@ -228,7 +228,7 @@ function ChatTab({
       orderBy("createdAt", "desc")
     );
     return safeOnSnapshot(q, (snap) => {
-      setPinned(snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) })));
+      setPinned(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
     });
   }, [projectId]);
 
@@ -238,7 +238,7 @@ function ChatTab({
     setText("");
     await addDoc(collection(db, "project_chats", projectId, "messages"), {
       text: clean,
-      senderИдентификатор: currentUserId,
+      senderId: currentUserId,
       createdAt: serverTimestamp(),
     });
   }
@@ -249,7 +249,7 @@ function ChatTab({
     if (!value) return;
     await addDoc(collection(db, "project_chats", projectId, "pinned"), {
       text: value.trim(),
-      authorИдентификатор: currentUserId,
+      authorId: currentUserId,
       createdAt: serverTimestamp(),
     });
   }
@@ -257,7 +257,7 @@ function ChatTab({
   return (
     <div className="grid gap-6">
       {pinned.length > 0 && (
-        <div className="panel motion p-4">
+        <div className="chat-pinned">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold">Закрепы</p>
             {isManager && (
@@ -266,9 +266,9 @@ function ChatTab({
               </button>
             )}
           </div>
-          <div className="mt-3 grid gap-2 text-sm">
+          <div className="mt-2 grid gap-2">
             {pinned.map((p) => (
-              <div key={p.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <div key={p.id} className="chat-pinned-item">
                 {p.text}
               </div>
             ))}
@@ -277,42 +277,57 @@ function ChatTab({
       )}
 
       <div className="panel motion p-6">
-        <div className="grid gap-3 max-h-[420px] overflow-y-auto hide-scrollbar">
+        <div className="chat-area rounded-2xl border border-white/10 bg-white/5 p-4 h-[360px] overflow-y-auto hide-scrollbar">
           {messages.length === 0 && (
-            <div className="text-sm text-muted">Пока нет сообщений в этом чате.</div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
+              Пока нет сообщений в этом чате.
+            </div>
           )}
-          {messages.map((m) => {
-            const isMe = m.senderId === currentUserId;
-            return (
-              <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm ${isMe ? "bg-[#7dd3a7] text-black" : "bg-white/5"}`}>
-                  {!isMe && (
-                    <div className="mb-1 text-xs text-muted">
-                      <UserName userId={m.senderId} />
+          {messages.length > 0 && (
+            <div className="grid gap-4">
+              {messages.map((m, index) => {
+                const isMine = m.senderId === currentUserId;
+                const prev = index > 0 ? messages[index - 1] : null;
+                const isSameSender = prev?.senderId && prev.senderId === m.senderId;
+                return (
+                  <div key={m.id ?? index} className={`chat-row group flex items-start gap-3${isMine ? " is-mine" : ""}`}>
+                    {!isMine && !isSameSender && (
+                      <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
+                    )}
+                    <div className={`chat-bubble min-w-0${isSameSender ? " chat-bubble-compact" : ""}`}>
+                      {!isMine && !isSameSender && (
+                        <div className="mb-1 text-xs text-muted">
+                          <UserName userId={m.senderId} />
+                        </div>
+                      )}
+                      <div className="chat-text">{m.text ?? ""}</div>
                     </div>
-                  )}
-                  {m.text}
-                </div>
-              </div>
-            );
-          })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-        <div className="mt-4 flex gap-3">
-          <input
-            className="input flex-1"
-            placeholder="Введите сообщение"
+
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <label className="text-xs text-muted">Сообщение</label>
+          <textarea
+            className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/90"
+            rows={3}
+            placeholder="Напишите сообщение"
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          <button className="btn btn-primary" onClick={sendMessage}>
-            Отправить
-          </button>
+          <div className="chat-controls">
+            <button className="btn btn-primary" onClick={sendMessage} disabled={!text.trim()}>
+              Отправить
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
 function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boolean }) {
   const [items, setItems] = useState<any[]>([]);
 
@@ -322,7 +337,7 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
       orderBy("createdAt", "desc")
     );
     return safeOnSnapshot(q, (snap) => {
-      setItems(snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) })));
+      setItems(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
     });
   }, [projectId]);
 
@@ -336,7 +351,7 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
     });
   }
 
-  async function editPinned(Идентификатор: string, currentText: string) {
+  async function editPinned(id: string, currentText: string) {
     if (!isManager) return;
     const value = window.prompt("Редактировать закреп", currentText);
     if (!value) return;
@@ -346,7 +361,7 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
     });
   }
 
-  async function deletePinned(Идентификатор: string) {
+  async function deletePinned(id: string) {
     if (!isManager) return;
     const ok = window.confirm("Удалить закреп?");
     if (!ok) return;
@@ -400,7 +415,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
   useEffect(() => {
     const q = query(collection(db, "project_schedules"), where("projectId", "==", projectId), orderBy("start"));
     return safeOnSnapshot(q, (snap) => {
-      const list = snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) }));
+      const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
       setSchedules(list);
     });
   }, [projectId]);
@@ -648,7 +663,7 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
       where("role", "in", ["admin", "worker"])
     );
     const unsubMembers = safeOnSnapshot(q, (snap) => {
-      const list = snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) }));
+      const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
       setMembers(list);
     });
     return () => {
@@ -707,7 +722,7 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
   );
 }
 
-function HoursTab({ projectId, currentUserId }: { projectId: string; currentuserId: string }) {
+function HoursTab({ projectId, currentUserId }: { projectId: string; currentUserId: string }) {
   const [items, setItems] = useState<any[]>([]);
   const [monthKey, setMonthKey] = useState("");
 
@@ -719,7 +734,7 @@ function HoursTab({ projectId, currentUserId }: { projectId: string; currentuser
     return safeOnSnapshot(q, (snap) => {
       const list = snap.docs.map((d) => {
         const userId = d.ref.parent.parent?.id ?? "";
-        return { Идентификатор: d.id, userId, ...(d.data() as any) };
+        return { id: d.id, userId, ...(d.data() as any) };
       });
       setItems(list);
     });
