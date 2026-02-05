@@ -120,7 +120,7 @@ const NAV_ITEMS = [
       .slice(0, 8);
   }, [searchValue, allUsers]);
 
-  async function loadProfile(userId: string) {
+    async function loadProfile(userId: string, projectIdOverride?: string) {
     setProfileLoading(true);
     setProfileError(null);
     setProfilePhone("");
@@ -131,12 +131,13 @@ const NAV_ITEMS = [
         setProfileError("Не удалось получить токен");
         return;
       }
-      if (!projectIdFromPath) {
+      const targetProjectId = projectIdOverride || projectIdFromPath;
+      if (!targetProjectId) {
         setProfileError("Откройте проект, чтобы редактировать профиль");
         return;
       }
       const res = await fetch(
-        `/api/user-profiles?projectId=${encodeURIComponent(projectIdFromPath)}&userId=${encodeURIComponent(userId)}`,
+        `/api/user-profiles?projectId=${encodeURIComponent(targetProjectId)}&userId=${encodeURIComponent(userId)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) {
@@ -230,7 +231,7 @@ const NAV_ITEMS = [
     }
   }
 
-    async function openProfile(user: { id: string; name: string; email: string; avatar?: string | null }) {
+  async function openProfile(user: { id: string; name: string; email: string; avatar?: string | null }) {
     setProfileUserId(user.id);
     setProfileName(user.name || "Нет имени");
     setProfileEmail(user.email || "Нет данных");
@@ -239,8 +240,8 @@ const NAV_ITEMS = [
     setProfileHoursMode("month");
     setProfileHours(null);
     setProfileOpen(true);
-    loadProfile(user.id);
     const resolvedProjectId = await loadProjectContext(user.id);
+    loadProfile(user.id, resolvedProjectId || projectIdFromPath || profileProjectId);
     loadHours(user.id, "month", resolvedProjectId || projectIdFromPath || profileProjectId);
   }
   async function saveProfile() {
