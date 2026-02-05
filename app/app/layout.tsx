@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, collectionGroup, getDocs, limit, query, where } from "firebase/firestore";
+import { collection, collectionGroup, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AuthGate from "../../components/AuthGate";
 import { auth, db } from "../../lib/firebase";
@@ -42,7 +42,8 @@ const NAV_ITEMS = [
   const [profileHours, setProfileHours] = useState<number | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-
+  const [profileProjectName, setProfileProjectName] = useState("");
+  const [profileRole, setProfileRole] = useState("");
   useEffect(() => {
     let unsub: (() => void) | null = null;
     const unsubAuth = onAuthStateChanged(auth, (user) => {
@@ -150,9 +151,40 @@ const NAV_ITEMS = [
     }
   }
 
+  async function loadProjectContext(userId: string) {
+    if (!projectIdFromPath) {
+      setProfileProjectName("");
+      setProfileRole("");
+      return;
+    }
+    try {
+      const projectSnap = await getDoc(doc(db, "projects", projectIdFromPath));
+      const projectData = projectSnap.data() as any;
+      setProfileProjectName(projectData?.name ?? projectIdFromPath);
+      const ownerId = projectData?.ownerId ?? null;
+      if (ownerId && ownerId === userId) {
+        setProfileRole("руководитель");
+        return;
+      }
+      const memberSnap = await getDoc(doc(db, "project_members", `${projectIdFromPath}_${userId}`));
+      const role = (memberSnap.data() as any)?.role ?? "";
+      setProfileRole(role === "admin" ? "менеджер" : role === "worker" ? "участник" : role);
+    } catch {
+      setProfileProjectName(projectIdFromPath);
+      setProfileRole("");
+    }
+  }
   async function loadHours(userId: string, mode: "month" | "all") {
     try {
-      const base = query(collectionGroup(db, "months"), where("userId", "==", userId));
+      if (!projectIdFromPath) {
+        setProfileHours(0);
+        return;
+      }
+      const base = query(
+        collectionGroup(db, "months"),
+        where("projectId", "==", projectIdFromPath),
+        where("userId", "==", userId)
+      );
       const q = mode === "month" ? query(base, where("month", "==", monthKey)) : base;
       const snap = await getDocs(q);
       let total = 0;
@@ -165,7 +197,6 @@ const NAV_ITEMS = [
       setProfileHours(0);
     }
   }
-
   function openProfile(user: { id: string; name: string; email: string; avatar?: string | null }) {
     setProfileUserId(user.id);
     setProfileName(user.name || "Нет имени");
@@ -175,9 +206,9 @@ const NAV_ITEMS = [
     setProfileHours(null);
     setProfileOpen(true);
     loadProfile(user.id);
+    loadProjectContext(user.id);
     loadHours(user.id, "month");
   }
-
   async function saveProfile() {
     if (!profileUserId) return;
     setProfileLoading(true);
@@ -272,7 +303,7 @@ const NAV_ITEMS = [
                     onFocus={() => setSearchOpen(true)}
                   />
                   {searchOpen && (searchValue.trim() || searchLoading) && (
-                    <div className="absolute right-0 top-[calc(100%+8px)] z-[60] w-[320px]" rounded-2xl border border-white/10 bg-[#0f1216] p-2 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+                    <div className="absolute right-0 top-[calc(100%+8px)] z-[60] w-[320px] rounded-2xl border border-white/10 bg-[#0f1216] p-2 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                       {searchLoading && (
                         <div className="px-3 py-2 text-sm text-muted">Загрузка...</div>
                       )}
@@ -382,9 +413,9 @@ const NAV_ITEMS = [
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <div className="text-xs text-muted">Проект</div>
-                    <div className="mt-1 text-sm">{projectIdFromPath || "Не выбран"}</div>
+                    <div className="mt-1 text-sm">{profileProjectName || projectIdFromPath || "Не выбран"}</div>
                     <div className="mt-3 text-xs text-muted">Роль</div>
-                    <div className="mt-1 text-sm">—</div>
+                    <div className="mt-1 text-sm">{profileRole || "—"}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-xs text-muted">Отработано</div>
