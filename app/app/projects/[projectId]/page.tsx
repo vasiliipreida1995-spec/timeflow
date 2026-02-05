@@ -720,6 +720,9 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
 function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boolean }) {
   const [members, setMembers] = useState<any[]>([]);
   const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [userNames, setUserNames] = useState<Record<string, string>>({});
+  const [userAvatars, setUserAvatars] = useState<Record<string, string>>({});
+  const [brokenAvatars, setBrokenAvatars] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const unsubProject = safeOnSnapshot(doc(db, "projects", projectId), (snap) => {
@@ -755,6 +758,28 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
     return list;
   }, [members, ownerId]);
 
+  useEffect(() => {
+    const ids = uniqueMembers.map((m) => m.userId).filter(Boolean);
+    if (!ids.length) {
+      setUserNames({});
+      setUserAvatars({});
+      return;
+    }
+    const q = query(collection(db, "users_public"), where("__name__", "in", Array.from(ids).slice(0, 10)));
+    return safeOnSnapshot(q, (snap) => {
+      const names: Record<string, string> = {};
+      const avatars: Record<string, string> = {};
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() as any;
+        names[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
+        const avatar = data?.photoURL ?? data?.avatarUrl ?? data?.avatar ?? null;
+        if (avatar) avatars[docSnap.id] = avatar;
+      });
+      setUserNames(names);
+      setUserAvatars(avatars);
+    });
+  }, [uniqueMembers]);
+
   return (
     <div className="panel motion p-6">
       <div className="flex items-center justify-between">
@@ -773,14 +798,24 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
               : m.role === "admin"
                 ? "менеджер"
                 : "участник";
+          const avatarId = m.userId ?? "";
+          const hasAvatar = userAvatars[avatarId] && !brokenAvatars[avatarId];
           return (
             <div key={m.userId} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-white/10" />
+                {hasAvatar ? (
+                  <img
+                    src={userAvatars[avatarId]}
+                    alt=""
+                    className="h-9 w-9 rounded-full object-cover"
+                    onError={() => setBrokenAvatars((prev) => ({ ...prev, [avatarId]: true }))}
+                  />
+                ) : (
+                  <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
+                )}
                 <div>
-                  <div className="font-semibold">
-                    <UserName userId={m.userId} />
-                  </div>                </div>
+                  <div className="font-semibold">{userNames[avatarId] ?? "Нет имени"}</div>
+                </div>
               </div>
               <div className="text-sm text-muted">{role}</div>
             </div>
@@ -790,7 +825,6 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
     </div>
   );
 }
-
 function HoursTab({ projectId, currentUserId }: { projectId: string; currentUserId: string }) {
   const [items, setItems] = useState<any[]>([]);
   const [monthKey, setMonthKey] = useState("");
