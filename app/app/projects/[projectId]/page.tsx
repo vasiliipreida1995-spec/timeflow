@@ -721,8 +721,23 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
   const [members, setMembers] = useState<any[]>([]);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [userNames, setUserNames] = useState<Record<string, string>>({});
+  const [userEmails, setUserEmails] = useState<Record<string, string>>({});
   const [userAvatars, setUserAvatars] = useState<Record<string, string>>({});
   const [brokenAvatars, setBrokenAvatars] = useState<Record<string, boolean>>({});
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileAddress, setProfileAddress] = useState("");
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [hoursMode, setHoursMode] = useState<"month" | "all">("month");
+  const [hoursValue, setHoursValue] = useState<number | null>(null);
+
+  const monthKey = useMemo(() => {
+    const d = new Date();
+    const m = (d.getMonth() + 1).toString().padStart(2, "0");
+    return `${d.getFullYear()}-${m}`;
+  }, []);
 
   useEffect(() => {
     const unsubProject = safeOnSnapshot(doc(db, "projects", projectId), (snap) => {
@@ -762,23 +777,111 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
     const ids = uniqueMembers.map((m) => m.userId).filter(Boolean);
     if (!ids.length) {
       setUserNames({});
+      setUserEmails({});
       setUserAvatars({});
       return;
     }
     const q = query(collection(db, "users_public"), where("__name__", "in", Array.from(ids).slice(0, 10)));
     return safeOnSnapshot(q, (snap) => {
       const names: Record<string, string> = {};
+      const emails: Record<string, string> = {};
       const avatars: Record<string, string> = {};
       snap.forEach((docSnap) => {
         const data = docSnap.data() as any;
         names[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
+        emails[docSnap.id] = data?.email ?? "";
         const avatar = data?.photoURL ?? data?.avatarUrl ?? data?.avatar ?? null;
         if (avatar) avatars[docSnap.id] = avatar;
       });
       setUserNames(names);
+      setUserEmails(emails);
       setUserAvatars(avatars);
     });
   }, [uniqueMembers]);
+
+  async function loadProfile(targetId: string) {
+    setProfileLoading(true);
+    setProfileError(null);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        setProfileError("Не удалось получить токен");
+        return;
+      }
+      const res = await fetch(
+        `/api/user-profiles?projectId=${encodeURIComponent(projectId)}&userId=${encodeURIComponent(targetId)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) {
+        setProfileError("Не удалось загрузить профиль");
+        return;
+      }
+      const data = await res.json();
+      setProfilePhone(data?.profile?.phone ?? "");
+      setProfileAddress(data?.profile?.address ?? "");
+    } catch {
+      setProfileError("Не удалось загрузить профиль");
+    } finally {
+      setProfileLoading(false);
+    }
+  }
+
+  async function loadHours(targetId: string, mode: "month" | "all") {
+    const qBase = query(collectionGroup(db, "months"), where("projectId", "==", projectId), where("userId", "==", targetId));
+    const q = mode === "month" ? query(qBase, where("month", "==", monthKey)) : qBase;
+    const snap = await getDocs(q);
+    let total = 0;
+    snap.forEach((d) => {
+      const data = d.data() as any;
+      total += Number(data?.totalMinutes ?? 0);
+    });
+    setHoursValue(total);
+  }
+
+  function openProfile(targetId: string) {
+    setSelectedId(targetId);
+    setProfileOpen(true);
+    setHoursMode("month");
+    setHoursValue(null);
+    setProfilePhone("");
+    setProfileAddress("");
+    loadProfile(targetId);
+    loadHours(targetId, "month");
+  }
+
+  async function saveProfile() {
+    if (!selectedId) return;
+    setProfileLoading(true);
+    setProfileError(null);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        setProfileError("Не удалось получить токен");
+        return;
+      }
+      const res = await fetch(`/api/user-profiles`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          projectId,
+          userId: selectedId,
+          phone: profilePhone || null,
+          address: profileAddress || null,
+        }),
+      });
+      if (!res.ok) {
+        setProfileError("Не удалось сохранить");
+        return;
+      }
+    } catch {
+      setProfileError("Не удалось сохранить");
+    } finally {
+      setProfileLoading(false);
+    }
+  }
 
   return (
     <div className="panel motion p-6">
@@ -801,7 +904,12 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
           const avatarId = m.userId ?? "";
           const hasAvatar = userAvatars[avatarId] && !brokenAvatars[avatarId];
           return (
-            <div key={m.userId} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <button
+              key={m.userId}
+              type="button"
+              onClick={() => openProfile(avatarId)}
+              className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-white/20"
+            >
               <div className="flex items-center gap-3">
                 {hasAvatar ? (
                   <img
@@ -815,13 +923,101 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
                 )}
                 <div>
                   <div className="font-semibold">{userNames[avatarId] ?? "Нет имени"}</div>
+                  <div className="text-xs text-muted">{userEmails[avatarId] || "Нет данных"}</div>
                 </div>
               </div>
               <div className="text-sm text-muted">{role}</div>
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {profileOpen && selectedId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-[#0f1216] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.55)]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                {userAvatars[selectedId] && !brokenAvatars[selectedId] ? (
+                  <img
+                    src={userAvatars[selectedId]}
+                    alt=""
+                    className="h-12 w-12 rounded-full object-cover"
+                    onError={() => setBrokenAvatars((prev) => ({ ...prev, [selectedId]: true }))}
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-[rgba(125,211,167,0.25)]" />
+                )}
+                <div>
+                  <div className="text-lg font-semibold">{userNames[selectedId] ?? "Нет имени"}</div>
+                  <div className="text-sm text-muted">{userEmails[selectedId] || "Нет данных"}</div>
+                </div>
+              </div>
+              <button className="btn btn-outline" onClick={() => setProfileOpen(false)}>Закрыть</button>
+            </div>
+
+            <div className="mt-6 grid gap-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs text-muted">Отработано</div>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    className={`btn btn-outline ${hoursMode === "month" ? "btn-primary" : ""}`}
+                    onClick={() => {
+                      setHoursMode("month");
+                      loadHours(selectedId, "month");
+                    }}
+                  >
+                    За месяц
+                  </button>
+                  <button
+                    className={`btn btn-outline ${hoursMode === "all" ? "btn-primary" : ""}`}
+                    onClick={() => {
+                      setHoursMode("all");
+                      loadHours(selectedId, "all");
+                    }}
+                  >
+                    За всё время
+                  </button>
+                </div>
+                <div className="mt-3 text-2xl font-semibold">
+                  {hoursValue == null ? "Загрузка..." : `${formatHours(hoursValue)} ч`}
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                <div>
+                  <label className="text-xs text-muted">Телефон</label>
+                  <input
+                    className="input mt-2"
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    placeholder="Добавьте номер телефона"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted">Адрес</label>
+                  <input
+                    className="input mt-2"
+                    value={profileAddress}
+                    onChange={(e) => setProfileAddress(e.target.value)}
+                    placeholder="Добавьте адрес"
+                  />
+                </div>
+              </div>
+
+              {profileError && <div className="text-sm text-rose-200">{profileError}</div>}
+
+              <div className="flex flex-wrap gap-3">
+                <button className="btn btn-primary" onClick={saveProfile} disabled={profileLoading}>
+                  {profileLoading ? "Сохранение..." : "Сохранить"}
+                </button>
+                <button className="btn btn-outline" onClick={() => setProfileOpen(false)}>
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
