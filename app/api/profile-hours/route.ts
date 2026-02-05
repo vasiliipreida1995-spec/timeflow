@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "../../../lib/firebaseAdmin";
 
 async function requireAuth(request: NextRequest) {
@@ -69,6 +69,28 @@ export async function GET(request: NextRequest) {
     const data = docSnap.data() as any;
     totalMinutes += Number(data?.totalMinutes ?? 0);
   });
+
+  if (mode === "month" && totalMinutes === 0) {
+    const monthDoc = await adminDb
+      .collection("accounting_hours")
+      .doc(userId)
+      .collection("months")
+      .doc(monthKey)
+      .get();
+    if (monthDoc.exists) {
+      totalMinutes = Number((monthDoc.data() as any)?.totalMinutes ?? 0);
+    } else if (monthKey.length >= 4) {
+      const yearDoc = await adminDb
+        .collection("accounting_hours")
+        .doc(userId)
+        .collection("months")
+        .doc(monthKey.slice(0, 4))
+        .get();
+      if (yearDoc.exists) {
+        totalMinutes = Number((yearDoc.data() as any)?.totalMinutes ?? 0);
+      }
+    }
+  }
 
   return NextResponse.json({ totalMinutes });
 }
