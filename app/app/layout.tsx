@@ -36,6 +36,7 @@ const NAV_ITEMS = [
   const [profileName, setProfileName] = useState("Нет имени");
   const [profileEmail, setProfileEmail] = useState("Нет данных");
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [brokenAvatar, setBrokenAvatar] = useState(false);
   const [profilePhone, setProfilePhone] = useState("");
   const [profileAddress, setProfileAddress] = useState("");
   const [profileHoursMode, setProfileHoursMode] = useState<"month" | "all">("month");
@@ -167,8 +168,12 @@ const NAV_ITEMS = [
         return;
       }
       const memberSnap = await getDoc(doc(db, "project_members", `${projectIdFromPath}_${userId}`));
+      if (!memberSnap.exists()) {
+        setProfileRole("не в проекте");
+        return;
+      }
       const role = (memberSnap.data() as any)?.role ?? "";
-      setProfileRole(role === "admin" ? "менеджер" : role === "worker" ? "участник" : role);
+      setProfileRole(role === "admin" ? "менеджер" : role === "worker" ? "участник" : role || "участник");
     } catch {
       setProfileProjectName(projectIdFromPath);
       setProfileRole("");
@@ -202,6 +207,7 @@ const NAV_ITEMS = [
     setProfileName(user.name || "Нет имени");
     setProfileEmail(user.email || "Нет данных");
     setProfileAvatar(user.avatar ?? null);
+    setBrokenAvatar(false);
     setProfileHoursMode("month");
     setProfileHours(null);
     setProfileOpen(true);
@@ -395,8 +401,13 @@ const NAV_ITEMS = [
           <div className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-[#0f1216] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.55)]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                {profileAvatar ? (
-                  <img src={profileAvatar} alt="" className="h-12 w-12 rounded-full object-cover" />
+                {profileAvatar && !brokenAvatar ? (
+                  <img
+                    src={profileAvatar}
+                    alt=""
+                    className="h-12 w-12 rounded-full object-cover"
+                    onError={() => setBrokenAvatar(true)}
+                  />
                 ) : (
                   <div className="h-12 w-12 rounded-full bg-[rgba(125,211,167,0.25)]" />
                 )}
@@ -415,7 +426,7 @@ const NAV_ITEMS = [
                     <div className="text-xs text-muted">Проект</div>
                     <div className="mt-1 text-sm">{profileProjectName || projectIdFromPath || "Не выбран"}</div>
                     <div className="mt-3 text-xs text-muted">Роль</div>
-                    <div className="mt-1 text-sm">{profileRole || "—"}</div>
+                    <div className="mt-1 text-sm">{profileRole || "не в проекте"}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-xs text-muted">Отработано</div>
