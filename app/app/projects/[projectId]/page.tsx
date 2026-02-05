@@ -933,8 +933,8 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
       </div>
 
       {profileOpen && selectedId && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-[#0f1216] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.55)]">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setProfileOpen(false)}>
+          <div className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-[#0f1216] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.55)]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 {userAvatars[selectedId] && !brokenAvatars[selectedId] ? (
