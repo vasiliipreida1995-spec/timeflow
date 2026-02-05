@@ -153,11 +153,48 @@ const NAV_ITEMS = [
   }
 
   async function loadProjectContext(userId: string) {
-    if (!projectIdFromPath) {
-      setProfileProjectName("");
+    try {
+      if (projectIdFromPath) {
+        const projectSnap = await getDoc(doc(db, "projects", projectIdFromPath));
+        const projectData = projectSnap.data() as any;
+        setProfileProjectName(projectData?.name ?? projectIdFromPath);
+        const ownerId = projectData?.ownerId ?? null;
+        if (ownerId && ownerId === userId) {
+          setProfileRole("руководитель");
+          return;
+        }
+        const memberSnap = await getDoc(doc(db, "project_members", `${projectIdFromPath}_${userId}`));
+        if (!memberSnap.exists()) {
+          setProfileRole("не в проекте");
+          return;
+        }
+        const role = (memberSnap.data() as any)?.role ?? "";
+        setProfileRole(role === "admin" ? "менеджер" : role === "worker" ? "участник" : role || "участник");
+        return;
+      }
+
+      const memberSnap = await getDocs(query(collection(db, "project_members"), where("userId", "==", userId), limit(1)));
+      if (memberSnap.empty) {
+        setProfileProjectName("");
+        setProfileRole("не в проекте");
+        return;
+      }
+      const member = memberSnap.docs[0].data() as any;
+      const projectId = member?.projectId ?? "";
+      if (projectId) {
+        const projectSnap = await getDoc(doc(db, "projects", projectId));
+        const projectData = projectSnap.data() as any;
+        setProfileProjectName(projectData?.name ?? projectId);
+      } else {
+        setProfileProjectName("");
+      }
+      const role = member?.role ?? "";
+      setProfileRole(role === "admin" ? "менеджер" : role === "worker" ? "участник" : role || "участник");
+    } catch {
+      setProfileProjectName(projectIdFromPath || "");
       setProfileRole("");
-      return;
     }
+  }
     try {
       const projectSnap = await getDoc(doc(db, "projects", projectIdFromPath));
       const projectData = projectSnap.data() as any;
