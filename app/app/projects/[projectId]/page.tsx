@@ -172,13 +172,40 @@ export default function ProjectPage() {
   );
 }
 
+function JoinProject({
+  projectId,
+  projectName,
+  isPending,
+  onApply,
+}: {
+  projectИдентификатор: string;
+  projectName: string;
+  isPending: boolean;
+  onApply: () => void;
+}) {
+  return (
+    <div className="panel motion p-6">
+      <h1 className="text-2xl font-semibold">Запрос на вступление</h1>
+      <p className="mt-2 text-sm text-muted">Проект: {projectName || projectId}</p>
+      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
+        Подайте заявку, чтобы руководитель проекта подтвердил доступ. После подтверждения вы увидите чат,
+        расписание и участников.
+      </div>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <button className="btn btn-primary" onClick={onApply} disabled={isPending}>
+          {isPending ? "Заявка отправлена" : "Оставить заявку"}
+        </button>
+      </div>
+    </div>
+  );
+}
 function ChatTab({
   projectId,
   currentUserId,
   isManager,
 }: {
-  projectId: string;
-  currentUserId: string;
+  projectИдентификатор: string;
+  currentUserИдентификатор: string;
   isManager: boolean;
 }) {
   const [messages, setMessages] = useState<any[]>([]);
@@ -191,7 +218,7 @@ function ChatTab({
       orderBy("createdAt", "asc")
     );
     return safeOnSnapshot(q, (snap) => {
-      setMessages(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+      setMessages(snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) })));
     });
   }, [projectId]);
 
@@ -201,7 +228,7 @@ function ChatTab({
       orderBy("createdAt", "desc")
     );
     return safeOnSnapshot(q, (snap) => {
-      setPinned(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+      setPinned(snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) })));
     });
   }, [projectId]);
 
@@ -211,7 +238,7 @@ function ChatTab({
     setText("");
     await addDoc(collection(db, "project_chats", projectId, "messages"), {
       text: clean,
-      senderId: currentUserId,
+      senderИдентификатор: currentUserId,
       createdAt: serverTimestamp(),
     });
   }
@@ -222,7 +249,7 @@ function ChatTab({
     if (!value) return;
     await addDoc(collection(db, "project_chats", projectId, "pinned"), {
       text: value.trim(),
-      authorId: currentUserId,
+      authorИдентификатор: currentUserId,
       createdAt: serverTimestamp(),
     });
   }
@@ -286,7 +313,7 @@ function ChatTab({
   );
 }
 
-function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boolean }) {
+function PinnedTab({ projectId, isManager }: { projectИдентификатор: string; isManager: boolean }) {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
@@ -295,7 +322,7 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
       orderBy("createdAt", "desc")
     );
     return safeOnSnapshot(q, (snap) => {
-      setItems(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+      setItems(snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) })));
     });
   }, [projectId]);
 
@@ -309,7 +336,7 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
     });
   }
 
-  async function editPinned(id: string, currentText: string) {
+  async function editPinned(Идентификатор: string, currentText: string) {
     if (!isManager) return;
     const value = window.prompt("Редактировать закреп", currentText);
     if (!value) return;
@@ -319,7 +346,7 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
     });
   }
 
-  async function deletePinned(id: string) {
+  async function deletePinned(Идентификатор: string) {
     if (!isManager) return;
     const ok = window.confirm("Удалить закреп?");
     if (!ok) return;
@@ -357,6 +384,424 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
     </div>
   );
 }
+function ScheduleTab({ projectId, userId, isManager }: { projectИдентификатор: string; userИдентификатор: string; isManager: boolean }) {
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [members, setMembers] = useState<string[]>([]);
+  const [names, setNames] = useState<Record<string, string>>({});
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createUserId, setCreateUserId] = useState("");
+  const [createDate, setCreateDate] = useState("");
+  const [createTime, setCreateTime] = useState("");
+  const [confirming, setConfirming] = useState<any | null>(null);
+  const [confirmStart, setConfirmStart] = useState("");
+  const [confirmEnd, setConfirmEnd] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const q = query(collection(db, "project_schedules"), where("projectId", "==", projectId), orderBy("start"));
+    return safeOnSnapshot(q, (snap) => {
+      const list = snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) }));
+      setSchedules(list);
+    });
+  }, [projectId]);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, "project_members"),
+      where("projectId", "==", projectId),
+      where("role", "in", ["admin", "worker"])
+    );
+    return safeOnSnapshot(q, (snap) => {
+      const ids = snap.docs.map((d) => (d.data() as any)?.userId).filter(Boolean);
+      setMembers(Array.from(new Set(ids)));
+    });
+  }, [projectId]);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      if (members.length === 0) {
+        setNames({});
+        return;
+      }
+      const entries = await Promise.all(
+        members.map(async (uid) => {
+          const snap = await getDoc(doc(db, "users_public", uid));
+          const data = snap.data() as any;
+          return [uid, data?.name ?? data?.email ?? uid] as const;
+        })
+      );
+      if (!active) return;
+      setNames(Object.fromEntries(entries));
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [members]);
+
+  const visibleSchedules = isManager ? schedules : schedules.filter((s) => s.userId === userId);
+
+  async function createSchedule() {
+    if (!createUserId || !createDate || !createTime) return;
+    const start = new Date(`${createDate}T${createTime}`);
+    if (Number.isNaN(start.getTime())) return;
+    setSubmitting(true);
+    try {
+      const oldSchedules = await getDocs(
+        query(
+          collection(db, "project_schedules"),
+          where("projectId", "==", projectId),
+          where("userId", "==", createUserId)
+        )
+      );
+      for (const d of oldSchedules.docs) {
+        await deleteDoc(d.ref);
+      }
+      await addDoc(collection(db, "project_schedules"), {
+        projectId,
+        userИдентификатор: createUserId,
+        start: Timestamp.fromDate(start),
+        createdAt: serverTimestamp(),
+      });
+      setCreateOpen(false);
+      setCreateUserId("");
+      setCreateDate("");
+      setCreateTime("");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function openConfirm(schedule: any) {
+    const planned = schedule?.start?.toDate ? schedule.start.toDate() : new Date();
+    setConfirming(schedule);
+    setConfirmStart(formatTime(planned));
+    setConfirmEnd("");
+  }
+
+  async function confirmShift() {
+    if (!confirming || !confirmStart || !confirmEnd) return;
+    const planned = confirming?.start?.toDate ? confirming.start.toDate() : new Date();
+    const date = `${planned.getFullYear()}-${(planned.getMonth() + 1).toString().padStart(2, "0")}-${planned
+      .getDate()
+      .toString()
+      .padStart(2, "0")}`;
+    const start = new Date(`${date}T${confirmStart}`);
+    const end = new Date(`${date}T${confirmEnd}`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
+    setSubmitting(true);
+    try {
+      const shiftsRef = collection(db, "work_shifts", userId, "shifts");
+      const oldShifts = await getDocs(
+        query(shiftsRef, where("projectId", "==", projectId), where("source", "==", "schedule"), where("shiftDate", "==", date))
+      );
+      for (const d of oldShifts.docs) {
+        await deleteDoc(d.ref);
+      }
+      await addDoc(shiftsRef, {
+        projectId,
+        shiftDate: date,
+        start: Timestamp.fromDate(start),
+        end: Timestamp.fromDate(end),
+        breakMinutes: 0,
+        createdAt: serverTimestamp(),
+        source: "schedule",
+      });
+      await updateDoc(doc(db, "project_schedules", confirming.id), {
+        scheduleConfirmed: true,
+        confirmedAt: serverTimestamp(),
+      });
+      await addWorkDayToAccounting({
+        userId,
+        projectId,
+        start,
+        end,
+        breakMinutes: 0,
+      });
+      setConfirming(null);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-6">
+      <div className="panel motion p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Расписание</h2>
+            <p className="mt-1 text-sm text-muted">Смены по проекту и подтверждение часов</p>
+          </div>
+          {isManager && (
+            <button className="btn btn-primary" onClick={() => setCreateOpen((v) => !v)}>
+              {createOpen ? "Скрыть форму" : "Добавить"}
+            </button>
+          )}
+        </div>
+        {createOpen && isManager && (
+          <div className="mt-4 grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="grid gap-2">
+              <label className="text-sm text-muted">Участник</label>
+              <select className="input" value={createUserId} onChange={(e) => setCreateUserId(e.target.value)}>
+                <option value="">Выберите участника</option>
+                {members.map((uid) => (
+                  <option key={uid} value={uid}>
+                    {names[uid] ?? uid}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm text-muted">Дата</label>
+              <input className="input" type="date" value={createDate} onChange={(e) => setCreateDate(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm text-muted">Время начала</label>
+              <input className="input" type="time" value={createTime} onChange={(e) => setCreateTime(e.target.value)} />
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button className="btn btn-primary" onClick={createSchedule} disabled={submitting}>
+                Создать смену
+              </button>
+              <button className="btn btn-outline" onClick={() => setCreateOpen(false)} disabled={submitting}>
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {confirming && (
+        <div className="panel motion p-6">
+          <h3 className="text-lg font-semibold">Подтверждение смены</h3>
+          <p className="mt-1 text-sm text-muted">Укажите фактическое время работы.</p>
+          <div className="mt-4 grid gap-3">
+            <div className="grid gap-2">
+              <label className="text-sm text-muted">Начал работу</label>
+              <input className="input" type="time" value={confirmStart} onChange={(e) => setConfirmStart(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm text-muted">Закончил работу</label>
+              <input className="input" type="time" value={confirmEnd} onChange={(e) => setConfirmEnd(e.target.value)} />
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button className="btn btn-primary" onClick={confirmShift} disabled={submitting}>
+              Подтвердить
+            </button>
+            <button className="btn btn-outline" onClick={() => setConfirming(null)} disabled={submitting}>
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        {visibleSchedules.length === 0 && <div className="panel motion p-6 text-sm text-muted">Расписаний нет.</div>}
+        {visibleSchedules.map((schedule) => {
+          const planned = schedule?.start?.toDate ? schedule.start.toDate() : null;
+          const confirmed = schedule?.scheduleConfirmed === true;
+          const scheduleUserId = schedule?.userId ?? "";
+          return (
+            <div key={`${schedule.id ?? ""}-${scheduleUserId}-${planned ? planned.getTime() : "no-date"}`} className="panel motion p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-2xl bg-emerald-500/20 px-4 py-3 text-lg font-semibold text-emerald-200">
+                  {planned ? formatTime(planned) : "--:--"}
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold">{names[scheduleUserId] ?? scheduleUserId}</div>
+                  <div className="text-sm text-muted">{planned ? formatDate(planned) : "Дата не указана"}</div>
+                  {planned && (
+                    <ScheduleWorkedMinutes projectId={projectId} userId={scheduleUserId} plannedStart={planned} />
+                  )}
+                </div>
+                {confirmed && <div className="text-xs text-emerald-300">Подтверждено</div>}
+              </div>
+              {!confirmed && scheduleUserId === userId && (
+                <div className="mt-4">
+                  <button className="btn btn-primary" onClick={() => openConfirm(schedule)}>
+                    Подтвердить смену
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PeopleTab({ projectId, isManager }: { projectИдентификатор: string; isManager: boolean }) {
+  const [members, setMembers] = useState<any[]>([]);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubProject = safeOnSnapshot(doc(db, "projects", projectId), (snap) => {
+      const data = snap.data() as any;
+      setOwnerId(data?.ownerId ?? null);
+    });
+    const q = query(
+      collection(db, "project_members"),
+      where("projectId", "==", projectId),
+      where("role", "in", ["admin", "worker"])
+    );
+    const unsubMembers = safeOnSnapshot(q, (snap) => {
+      const list = snap.docs.map((d) => ({ Идентификатор: d.id, ...(d.data() as any) }));
+      setMembers(list);
+    });
+    return () => {
+      unsubProject();
+      unsubMembers();
+    };
+  }, [projectId]);
+
+  const uniqueMembers = useMemo(() => {
+    const seen = new Set<string>();
+    const list: any[] = [];
+    for (const m of members) {
+      if (!m?.userId || seen.has(m.userId)) continue;
+      seen.add(m.userId);
+      list.push(m);
+    }
+    if (ownerId && !seen.has(ownerId)) {
+      list.unshift({ userИдентификатор: ownerId, role: "owner" });
+    }
+    return list;
+  }, [members, ownerId]);
+
+  return (
+    <div className="panel motion p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Люди</h2>
+          <p className="mt-1 text-sm text-muted">Участники и роли в проекте</p>
+        </div>
+        <div className="text-sm text-muted">Всего: {uniqueMembers.length}</div>
+      </div>
+      <div className="mt-4 grid gap-3">
+        {uniqueMembers.length === 0 && <div className="text-sm text-muted">Пока нет участников.</div>}
+        {uniqueMembers.map((m) => {
+          const role =
+            m.userId === ownerId
+              ? "руководитель"
+              : m.role === "admin"
+                ? "менеджер"
+                : "участник";
+          return (
+            <div key={m.userId} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-white/10" />
+                <div>
+                  <div className="font-semibold">
+                    <UserName userId={m.userId} />
+                  </div>
+                  <div className="text-xs text-muted">Идентификатор: {m.userId}</div>
+                </div>
+              </div>
+              <div className="text-sm text-muted">{role}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HoursTab({ projectId, currentUserId }: { projectИдентификатор: string; currentUserИдентификатор: string }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [monthKey, setMonthKey] = useState("");
+
+  useEffect(() => {
+    const now = new Date();
+    const key = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}`;
+    setMonthKey(key);
+    const q = query(collectionGroup(db, "months"), where("projectId", "==", projectId), where("month", "==", key));
+    return safeOnSnapshot(q, (snap) => {
+      const list = snap.docs.map((d) => {
+        const userId = d.ref.parent.parent?.id ?? "";
+        return { Идентификатор: d.id, userId, ...(d.data() as any) };
+      });
+      setItems(list);
+    });
+  }, [projectId]);
+
+  const sorted = useMemo(() => {
+    return [...items].sort((a, b) => Number(b.totalMinutes ?? 0) - Number(a.totalMinutes ?? 0));
+  }, [items]);
+
+  return (
+    <div className="panel motion p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Часы</h2>
+          <p className="mt-1 text-sm text-muted">Текущий месяц: {monthKey || "—"}</p>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3">
+        {sorted.length === 0 && <div className="text-sm text-muted">Нет данных по часам.</div>}
+        {sorted.map((item) => {
+          const minutes = Number(item.totalMinutes ?? 0);
+          const isMe = item.userId === currentUserId;
+          return (
+            <div key={`${item.userId}-${item.id}`} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <div>
+                <div className="font-semibold">
+                  <UserName userId={item.userId} />
+                </div>
+                <div className="text-xs text-muted">{isMe ? "Это вы" : "Участник проекта"}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-semibold">{formatHours(minutes)} ч</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ScheduleWorkedMinutes({
+  projectId,
+  userId,
+  plannedStart,
+}: {
+  projectИдентификатор: string;
+  userИдентификатор: string;
+  plannedStart: Date;
+}) {
+  const [minutes, setMinutes] = useState<number>(0);
+
+  useEffect(() => {
+    if (!userId) return;
+    const startWindow = new Date(plannedStart.getTime() - 12 * 60 * 60 * 1000);
+    const endWindow = new Date(plannedStart.getTime() + 12 * 60 * 60 * 1000);
+    const q = query(
+      collection(db, "work_shifts", userId, "shifts"),
+      where("projectId", "==", projectId),
+      where("source", "==", "schedule")
+    );
+    return safeOnSnapshot(q, (snap) => {
+      let total = 0;
+      snap.forEach((d) => {
+        const data = d.data() as any;
+        if (!data?.start || !data?.end) return;
+        const s = data.start.toDate ? data.start.toDate() : new Date(data.start);
+        const e = data.end.toDate ? data.end.toDate() : new Date(data.end);
+        if (s < startWindow || s > endWindow) return;
+        total += Math.max(0, Math.floor((e.getTime() - s.getTime()) / 60000));
+      });
+      setMinutes(total);
+    });
+  }, [projectId, userId, plannedStart]);
+
+  if (minutes <= 0) return null;
+  const label = minutes >= 60 ? `${Math.floor(minutes / 60)} ч ${minutes % 60 ? `${minutes % 60} мин` : ""}` : `${minutes} мин`;
+
+  return <div className="mt-2 text-sm font-semibold text-emerald-300">Отработано: {label}</div>;
+}
 function ProjectRules() {
   return (
     <div className="panel motion p-6">
@@ -372,7 +817,7 @@ function ProjectRules() {
   );
 }
 
-function UserName({ userId }: { userId: string }) {
+function UserName({ userId }: { userИдентификатор: string }) {
   const [name, setName] = useState<string>(userId);
 
   useEffect(() => {
@@ -386,7 +831,7 @@ function UserName({ userId }: { userId: string }) {
   return <span>{name}</span>;
 }
 
-async function updateOrCreateMember(projectId: string, userId: string) {
+async function updateOrCreateMember(projectИдентификатор: string, userИдентификатор: string) {
   const memberId = `${projectId}_${userId}`;
   const memberRef = doc(db, "project_members", memberId);
   await setDoc(
@@ -401,7 +846,7 @@ async function updateOrCreateMember(projectId: string, userId: string) {
   );
 }
 
-async function getProjectAdmins(projectId: string) {
+async function getProjectAdmins(projectИдентификатор: string) {
   const adminIds = new Set<string>();
 
   const projectDoc = await getDoc(doc(db, "projects", projectId));
@@ -449,8 +894,8 @@ async function addWorkDayToAccounting({
   end,
   breakMinutes,
 }: {
-  userId: string;
-  projectId: string;
+  userИдентификатор: string;
+  projectИдентификатор: string;
   start: Date;
   end: Date;
   breakMinutes: number;
@@ -496,3 +941,4 @@ async function addWorkDayToAccounting({
       updatedAt: serverTimestamp(),
     });
   });
+}
