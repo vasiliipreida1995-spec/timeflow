@@ -341,26 +341,32 @@ function ChatTab({
                 const isMine = m.senderId === currentUserId;
                 const prev = index > 0 ? messages[index - 1] : null;
                 const isSameSender = prev?.senderId && prev.senderId === m.senderId;
+                const avatarId = m.senderId ?? "";
+                const hasAvatar = userAvatars[avatarId] && !brokenAvatars[avatarId];
+                const showAvatar = !isSameSender && !isMine;
                 return (
-                  <div key={m.id ?? index} className={`chat-row group flex items-start gap-3${isMine ? " is-mine" : ""}`}>
-                    {!isMine && !isSameSender && (
+                  <div
+                    key={m.id ?? index}
+                    className={`chat-row group flex w-full items-start gap-3 ${isMine ? "justify-end" : "justify-start"}`}
+                  >
+                    {showAvatar && (
                       <>
-                        {userAvatars[m.senderId ?? ""] && !brokenAvatars[m.senderId ?? ""] ? (
+                        {hasAvatar ? (
                           <img
-                            src={userAvatars[m.senderId ?? ""]}
+                            src={userAvatars[avatarId]}
                             alt=""
                             className="h-9 w-9 rounded-full object-cover"
-                            onError={() => setBrokenAvatars((prev) => ({ ...prev, [m.senderId ?? ""]: true }))}
+                            onError={() => setBrokenAvatars((prev) => ({ ...prev, [avatarId]: true }))}
                           />
                         ) : (
                           <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
                         )}
                       </>
                     )}
-                    <div className={`chat-bubble min-w-0${isSameSender ? " chat-bubble-compact" : ""}`}>
+                    <div className={`chat-bubble min-w-0 ${isMine ? "ml-auto" : ""}${isSameSender ? " chat-bubble-compact" : ""}`}>
                       {!isMine && !isSameSender && (
                         <div className="mb-1 text-xs text-muted">
-                          {userNames[m.senderId ?? ""] ?? "Нет имени"}
+                          {userNames[avatarId] ?? "Нет имени"}
                         </div>
                       )}
                       <div className="chat-text">{m.text ?? ""}</div>
