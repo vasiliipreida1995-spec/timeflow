@@ -209,15 +209,13 @@ const NAV_ITEMS = [
   async function loadHours(userId: string, mode: "month" | "all", projectIdOverride?: string) {
     try {
       const targetProjectId = projectIdOverride || projectIdFromPath;
-      if (!targetProjectId) {
-        setProfileHours(0);
-        return;
-      }
-      const base = query(
-        collectionGroup(db, "months"),
-        where("projectId", "==", targetProjectId),
-        where("userId", "==", userId)
-      );
+      const base = targetProjectId
+        ? query(
+            collectionGroup(db, "months"),
+            where("projectId", "==", targetProjectId),
+            where("userId", "==", userId)
+          )
+        : query(collectionGroup(db, "months"), where("userId", "==", userId));
       const q = mode === "month" ? query(base, where("month", "==", monthKey)) : base;
       const snap = await getDocs(q);
       let total = 0;
