@@ -206,23 +206,30 @@ const NAV_ITEMS = [
     return resolvedProjectId;
   }
 
-  async function loadHours(userId: string, mode: "month" | "all", projectIdOverride?: string) {
+    async function loadHours(userId: string, mode: "month" | "all", projectIdOverride?: string) {
     try {
-      const targetProjectId = projectIdOverride || projectIdFromPath;
-      const base = targetProjectId
-        ? query(
-            collection(db, "accounting_hours", userId, "months"),
-            where("projectId", "==", targetProjectId)
-          )
-        : query(collection(db, "accounting_hours", userId, "months"));
-      const q = mode === "month" ? query(base, where("month", "==", monthKey)) : base;
-      const snap = await getDocs(q);
-      let total = 0;
-      snap.forEach((d) => {
-        const data = d.data() as any;
-        total += Number(data?.totalMinutes ?? 0);
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        setProfileHours(0);
+        return;
+      }
+      const targetProjectId = projectIdOverride || projectIdFromPath || "";
+      const url = new URL("/api/profile-hours", window.location.origin);
+      url.searchParams.set("userId", userId);
+      if (targetProjectId) {
+        url.searchParams.set("projectId", targetProjectId);
+      }
+      url.searchParams.set("mode", mode);
+      url.searchParams.set("monthKey", monthKey);
+      const res = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setProfileHours(total);
+      if (!res.ok) {
+        setProfileHours(0);
+        return;
+      }
+      const data = await res.json();
+      setProfileHours(Number(data?.totalMinutes ?? 0));
     } catch {
       setProfileHours(0);
     }
