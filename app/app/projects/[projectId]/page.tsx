@@ -166,7 +166,7 @@ export default function ProjectPage() {
       {tab === "chat" && <ChatTab projectId={projectId} currentUserId={userId} isManager={isManager} />}
       {tab === "pinned" && <PinnedTab projectId={projectId} isManager={isManager} />}
       {tab === "schedule" && <ScheduleTab projectId={projectId} userId={userId} isManager={isManager} />}
-      {tab === "people" && <PeopleTab projectId={projectId} isManager={isManager} />}
+      {tab === "people" && <PeopleTab projectId={projectId} projectName={projectName} isManager={isManager} />}
       {tab === "hours" && <HoursTab projectId={projectId} currentUserId={userId} />}
     </div>
   );
@@ -717,7 +717,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
   );
 }
 
-function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boolean }) {
+function PeopleTab({ projectId, projectName, isManager }: { projectId: string; projectName: string; isManager: boolean }) {
   const [members, setMembers] = useState<any[]>([]);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [userNames, setUserNames] = useState<Record<string, string>>({});
@@ -733,6 +733,15 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
   const [hoursMode, setHoursMode] = useState<"month" | "all">("month");
   const [hoursValue, setHoursValue] = useState<number | null>(null);
 
+
+  const selectedMember = selectedId ? uniqueMembers.find((m) => m.userId === selectedId) : null;
+  const selectedRole = selectedMember
+    ? selectedMember.userId === ownerId
+      ? "руководитель"
+      : selectedMember.role === "admin"
+        ? "менеджер"
+        : "участник"
+    : "";
   const monthKey = useMemo(() => {
     const d = new Date();
     const m = (d.getMonth() + 1).toString().padStart(2, "0");
@@ -772,6 +781,15 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
     }
     return list;
   }, [members, ownerId]);
+
+  const selectedMember = selectedId ? uniqueMembers.find((m) => m.userId === selectedId) : null;
+  const selectedRole = selectedMember
+    ? selectedMember.userId === ownerId
+      ? "руководитель"
+      : selectedMember.role === "admin"
+        ? "менеджер"
+        : "участник"
+    : "";
 
   useEffect(() => {
     const ids = uniqueMembers.map((m) => m.userId).filter(Boolean);
@@ -955,7 +973,7 @@ function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boo
               <button className="btn btn-outline" onClick={() => setProfileOpen(false)}>Закрыть</button>
             </div>
 
-            <div className="mt-6 grid gap-4">
+            <div className="mt-6 grid gap-4">\r\n              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">\r\n                <div className="text-xs text-muted">Проект</div>\r\n                <div className="mt-1 text-sm">{projectName || projectId}</div>\r\n                <div className="mt-3 text-xs text-muted">Роль</div>\r\n                <div className="mt-1 text-sm">{selectedRole || "—"}</div>\r\n              </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="text-xs text-muted">Отработано</div>
                 <div className="mt-2 flex items-center gap-2">
