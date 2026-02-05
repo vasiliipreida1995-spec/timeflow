@@ -353,4 +353,3 @@ function MemberRow({ member }: { member: ProjectMember }) {
     </div>
   );
 }
-}
