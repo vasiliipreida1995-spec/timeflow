@@ -943,7 +943,7 @@ function PeopleTab({ projectId, projectName, isManager }: { projectId: string; p
       </div>
 
       {profileOpen && selectedId && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setProfileOpen(false)}>
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/50 p-4" onClick={() => setProfileOpen(false)}>
           <div className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-[#0f1216] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.55)]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -965,10 +965,21 @@ function PeopleTab({ projectId, projectName, isManager }: { projectId: string; p
               <button className="btn btn-outline" onClick={() => setProfileOpen(false)}>Закрыть</button>
             </div>
 
-            <div className="mt-6 grid gap-4">              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">                <div className="text-xs text-muted">Проект</div>                <div className="mt-1 text-sm">{projectName || projectId}</div>                <div className="mt-3 text-xs text-muted">Роль</div>                <div className="mt-1 text-sm">{selectedRole || "—"}</div>              </div>
+            <div className="mt-6 grid gap-4">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs text-muted">Отработано</div>
-                <div className="mt-2 flex items-center gap-2">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="text-xs text-muted">Проект</div>
+                    <div className="mt-1 text-sm">{projectName || projectId}</div>
+                    <div className="mt-3 text-xs text-muted">Роль</div>
+                    <div className="mt-1 text-sm">{selectedRole || "—"}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-muted">Отработано</div>
+                    <div className="mt-2 text-2xl font-semibold">{hoursValue == null ? "Загрузка..." : `${formatHours(hoursValue)} ч`}</div>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     className={`btn btn-outline ${hoursMode === "month" ? "btn-primary" : ""}`}
                     onClick={() => {
@@ -987,9 +998,6 @@ function PeopleTab({ projectId, projectName, isManager }: { projectId: string; p
                   >
                     За всё время
                   </button>
-                </div>
-                <div className="mt-3 text-2xl font-semibold">
-                  {hoursValue == null ? "Загрузка..." : `${formatHours(hoursValue)} ч`}
                 </div>
               </div>
 
