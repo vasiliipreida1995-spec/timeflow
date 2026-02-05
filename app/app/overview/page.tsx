@@ -190,7 +190,7 @@ function ProjectSelect({ value, projects, onChange }: ProjectSelectProps) {
 
 function UserLabel({ userId, userNames }: { userId?: string | null; userNames: Record<string, string> }) {
   if (!userId) return <span>Пользователь</span>;
-  return <span>{userNames[userId] ?? userId}</span>;
+  return <span>{userNames[userId] ?? "Нет имени"}</span>;
 }
 
 export default function OverviewPage() {
@@ -660,7 +660,7 @@ export default function OverviewPage() {
       const avatars: Record<string, string> = {};
       snap.forEach((docSnap) => {
         const data = docSnap.data() as any;
-        map[docSnap.id] = data?.name ?? data?.email ?? docSnap.id;
+        map[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
         const avatar = data?.photoURL ?? data?.avatarUrl ?? data?.avatar ?? null;
         if (avatar) avatars[docSnap.id] = avatar;
       });
@@ -710,7 +710,7 @@ export default function OverviewPage() {
           const map: Record<string, string> = {};
           snap.forEach((docSnap) => {
             const data = docSnap.data() as any;
-            map[docSnap.id] = data?.name ?? data?.email ?? docSnap.id;
+            map[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
           });
           setUserNames(map);
         }

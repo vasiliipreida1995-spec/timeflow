@@ -388,7 +388,7 @@ export default function ReportsPage() {
 
           const data = docSnap.data() as any;
 
-          map.set(docSnap.id, data?.name ?? data?.email ?? docSnap.id);
+          map.set(docSnap.id, data?.name ?? data?.email ?? "Нет имени");
 
         });
 
@@ -396,7 +396,7 @@ export default function ReportsPage() {
 
       if (cancelled) return;
 
-      setUserTotals((prev) => prev.map((u) => ({ ...u, name: map.get(u.userId) ?? u.userId })));
+      setUserTotals((prev) => prev.map((u) => ({ ...u, name: map.get(u.userId) ?? "Нет имени" })));
 
     };
 
@@ -438,7 +438,7 @@ export default function ReportsPage() {
 
     ? Object.entries(projectUserMinutes[selectedProjectId] ?? {}).map(([uid, minutes]) => {
 
-        const name = userTotals.find((u) => u.userId === uid)?.name ?? uid;
+        const name = userTotals.find((u) => u.userId === uid)?.name ?? "Нет имени";
 
         return { userId: uid, name, minutes };
 

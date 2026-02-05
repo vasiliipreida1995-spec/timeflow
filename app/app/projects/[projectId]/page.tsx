@@ -178,7 +178,7 @@ function JoinProject({
   isPending,
   onApply,
 }: {
-  projectИдентификатор: string;
+  projectId: string;
   projectName: string;
   isPending: boolean;
   onApply: () => void;
@@ -204,8 +204,8 @@ function ChatTab({
   currentUserId,
   isManager,
 }: {
-  projectИдентификатор: string;
-  currentUserИдентификатор: string;
+  projectId: string;
+  currentuserId: string;
   isManager: boolean;
 }) {
   const [messages, setMessages] = useState<any[]>([]);
@@ -313,7 +313,7 @@ function ChatTab({
   );
 }
 
-function PinnedTab({ projectId, isManager }: { projectИдентификатор: string; isManager: boolean }) {
+function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boolean }) {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
@@ -384,7 +384,7 @@ function PinnedTab({ projectId, isManager }: { projectИдентификатор
     </div>
   );
 }
-function ScheduleTab({ projectId, userId, isManager }: { projectИдентификатор: string; userИдентификатор: string; isManager: boolean }) {
+function ScheduleTab({ projectId, userId, isManager }: { projectId: string; userId: string; isManager: boolean }) {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [members, setMembers] = useState<string[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
@@ -428,7 +428,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectИдентифи
         members.map(async (uid) => {
           const snap = await getDoc(doc(db, "users_public", uid));
           const data = snap.data() as any;
-          return [uid, data?.name ?? data?.email ?? uid] as const;
+          return [uid, data?.name ?? data?.email ?? "Нет имени"] as const;
         })
       );
       if (!active) return;
@@ -460,7 +460,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectИдентифи
       }
       await addDoc(collection(db, "project_schedules"), {
         projectId,
-        userИдентификатор: createUserId,
+        userId: createUserId,
         start: Timestamp.fromDate(start),
         createdAt: serverTimestamp(),
       });
@@ -547,7 +547,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectИдентифи
                 <option value="">Выберите участника</option>
                 {members.map((uid) => (
                   <option key={uid} value={uid}>
-                    {names[uid] ?? uid}
+                    {names[uid] ?? "Нет имени"}
                   </option>
                 ))}
               </select>
@@ -610,7 +610,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectИдентифи
                   {planned ? formatTime(planned) : "--:--"}
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold">{names[scheduleUserId] ?? scheduleUserId}</div>
+                  <div className="font-semibold">{names[scheduleUserId] ?? "Нет имени"}</div>
                   <div className="text-sm text-muted">{planned ? formatDate(planned) : "Дата не указана"}</div>
                   {planned && (
                     <ScheduleWorkedMinutes projectId={projectId} userId={scheduleUserId} plannedStart={planned} />
@@ -633,7 +633,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectИдентифи
   );
 }
 
-function PeopleTab({ projectId, isManager }: { projectИдентификатор: string; isManager: boolean }) {
+function PeopleTab({ projectId, isManager }: { projectId: string; isManager: boolean }) {
   const [members, setMembers] = useState<any[]>([]);
   const [ownerId, setOwnerId] = useState<string | null>(null);
 
@@ -666,7 +666,7 @@ function PeopleTab({ projectId, isManager }: { projectИдентификатор
       list.push(m);
     }
     if (ownerId && !seen.has(ownerId)) {
-      list.unshift({ userИдентификатор: ownerId, role: "owner" });
+      list.unshift({ userId: ownerId, role: "owner" });
     }
     return list;
   }, [members, ownerId]);
@@ -696,9 +696,7 @@ function PeopleTab({ projectId, isManager }: { projectИдентификатор
                 <div>
                   <div className="font-semibold">
                     <UserName userId={m.userId} />
-                  </div>
-                  <div className="text-xs text-muted">Идентификатор: {m.userId}</div>
-                </div>
+                  </div>                </div>
               </div>
               <div className="text-sm text-muted">{role}</div>
             </div>
@@ -709,7 +707,7 @@ function PeopleTab({ projectId, isManager }: { projectИдентификатор
   );
 }
 
-function HoursTab({ projectId, currentUserId }: { projectИдентификатор: string; currentUserИдентификатор: string }) {
+function HoursTab({ projectId, currentUserId }: { projectId: string; currentuserId: string }) {
   const [items, setItems] = useState<any[]>([]);
   const [monthKey, setMonthKey] = useState("");
 
@@ -768,8 +766,8 @@ function ScheduleWorkedMinutes({
   userId,
   plannedStart,
 }: {
-  projectИдентификатор: string;
-  userИдентификатор: string;
+  projectId: string;
+  userId: string;
   plannedStart: Date;
 }) {
   const [minutes, setMinutes] = useState<number>(0);
@@ -817,21 +815,32 @@ function ProjectRules() {
   );
 }
 
-function UserName({ userId }: { userИдентификатор: string }) {
-  const [name, setName] = useState<string>(userId);
+function UserName({ userId }: { userId: string }) {
+  const [name, setName] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setName(null);
+      setLoaded(true);
+      return;
+    }
     return safeOnSnapshot(doc(db, "users_public", userId), (snap) => {
+      if (!snap.exists()) {
+        setName(null);
+        setLoaded(true);
+        return;
+      }
       const data = snap.data() as any;
-      setName(data?.name ?? data?.email ?? userId);
+      setName(data?.name ?? data?.email ?? null);
+      setLoaded(true);
     });
   }, [userId]);
 
-  return <span>{name}</span>;
+  if (!loaded) return <span />;
+  return <span>{name ?? "Нет имени"}</span>;
 }
-
-async function updateOrCreateMember(projectИдентификатор: string, userИдентификатор: string) {
+async function updateOrCreateMember(projectId: string, userId: string) {
   const memberId = `${projectId}_${userId}`;
   const memberRef = doc(db, "project_members", memberId);
   await setDoc(
@@ -846,7 +855,7 @@ async function updateOrCreateMember(projectИдентификатор: string, u
   );
 }
 
-async function getProjectAdmins(projectИдентификатор: string) {
+async function getProjectAdmins(projectId: string) {
   const adminIds = new Set<string>();
 
   const projectDoc = await getDoc(doc(db, "projects", projectId));
@@ -894,8 +903,8 @@ async function addWorkDayToAccounting({
   end,
   breakMinutes,
 }: {
-  userИдентификатор: string;
-  projectИдентификатор: string;
+  userId: string;
+  projectId: string;
   start: Date;
   end: Date;
   breakMinutes: number;

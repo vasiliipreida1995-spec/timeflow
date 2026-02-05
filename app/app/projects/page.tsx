@@ -317,34 +317,40 @@ export default function ProjectsPage() {
 }
 
 function MemberRow({ member }: { member: ProjectMember }) {
-  const [label, setLabel] = useState<string>("Загрузка...");
+  const [label, setLabel] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (!member.userId) {
-      setLabel("Пользователь неизвестен");
+      setLabel(null);
+      setEmail(null);
+      setLoaded(true);
       return;
     }
 
     return safeOnSnapshot(doc(db, "users_public", member.userId), (snap) => {
       if (!snap.exists()) {
-        setLabel(member.userId);
+        setLabel(null);
         setEmail(null);
+        setLoaded(true);
         return;
       }
       const data = snap.data() as any;
-      setLabel(data?.name ?? data?.email ?? member.userId);
+      setLabel(data?.name ?? data?.email ?? null);
       setEmail(data?.email ?? null);
+      setLoaded(true);
     });
   }, [member.userId]);
 
   return (
     <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
       <div>
-        <p className="font-semibold">{label}</p>
-        <p className="text-xs text-muted">{email ?? member.userId ?? "-"}</p>
+        <p className="font-semibold">{loaded ? label ?? "Нет имени" : ""}</p>
+        <p className="text-xs text-muted">{email ?? "Нет данных"}</p>
       </div>
       <span className="pill">{member.role ?? "member"}</span>
     </div>
   );
+}
 }
