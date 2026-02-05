@@ -195,6 +195,8 @@ const NAV_ITEMS = [
       setProfileRole("");
     }
   }
+
+  async function loadHours(userId: string, mode: "month" | "all") {
     try {
       if (!projectIdFromPath) {
         setProfileHours(0);
@@ -217,6 +219,7 @@ const NAV_ITEMS = [
       setProfileHours(0);
     }
   }
+
   function openProfile(user: { id: string; name: string; email: string; avatar?: string | null }) {
     setProfileUserId(user.id);
     setProfileName(user.name || "Нет имени");
