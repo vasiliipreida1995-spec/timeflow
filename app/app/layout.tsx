@@ -43,7 +43,8 @@ const NAV_ITEMS = [
   const [profileHours, setProfileHours] = useState<number | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileProjectName, setProfileProjectName] = useState("");`n  const [profileProjectId, setProfileProjectId] = useState("");
+  const [profileProjectName, setProfileProjectName] = useState("");
+  const [profileProjectId, setProfileProjectId] = useState("");
   const [profileRole, setProfileRole] = useState("");
   useEffect(() => {
     let unsub: (() => void) | null = null;
