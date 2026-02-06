@@ -946,15 +946,7 @@ export default function ReportsPage() {
 
 
 
-    const w = window.open("", "_blank", "width=1200,height=900");
-
-    if (!w) return;
-
-    w.document.write(html);
-
-    w.document.close();
-
-    if (selectedProjectId) {
+    const w = window.open("", "_blank", "width=1200,height=900");\n    const w2 = selectedProjectId ? window.open("", "_blank", "width=1200,height=900") : null;\n\n    if (!w) return;\n\n    w.document.write(html);\n\n    w.document.close();\n\n    if (selectedProjectId && w2) {
       const dayHtml = `
         <!doctype html>
         <html lang="ru">
@@ -1110,8 +1102,7 @@ export default function ReportsPage() {
         </body>
         </html>
       `;
-      const w2 = window.open("", "_blank", "width=1200,height=900");
-      if (w2) {
+if (w2) {
         w2.document.write(dayHtml);
         w2.document.close();
       }
