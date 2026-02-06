@@ -299,7 +299,7 @@ export default function OverviewPage() {
     const q = query(collection(db, "projects"), where("ownerId", "==", userId), where("archived", "==", false));
 
     return safeOnSnapshot(q, (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      const list = snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as any) }));
       setProjects(list);
       setActiveProjects(list.length);
 
