@@ -1,6 +1,6 @@
-﻿import { onSnapshot } from "firebase/firestore";
+import { onSnapshot } from "firebase/firestore";
 
-export function safeOnSnapshot<T>(ref: any, onNext: (snap: T) => void) {
+export function safeOnSnapshot(ref: any, onNext: (snap: any) => void) {
   return onSnapshot(
     ref,
     onNext,
