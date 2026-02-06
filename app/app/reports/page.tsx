@@ -784,45 +784,7 @@ export default function ReportsPage() {
 
   td.value { width: 120px; text-align: right; font-weight: 600; }
 
-  .watermark {
-
-    position: absolute;
-
-    inset: 0;
-
-    pointer-events: none;
-
-    opacity: 0.05;
-
-    background-image: repeating-linear-gradient(135deg, rgba(15, 23, 42, 0.2) 0 1px, transparent 1px 32px);
-
-  }
-
-  .watermark-text {
-
-    position: absolute;
-
-    inset: 0;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    font-size: 64px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.3em;
-
-    color: #0f172a;
-
-    opacity: 0.05;
-
-    transform: rotate(-22deg);
-
-  }
+  .watermark {\n\n    position: absolute;\n\n    inset: 0;\n\n    pointer-events: none;\n\n    opacity: 0.12;\n\n    background-image:\n\n      repeating-linear-gradient(0deg, rgba(15, 23, 42, 0.18) 0 1px, transparent 1px 14px),\n\n      repeating-linear-gradient(90deg, rgba(15, 23, 42, 0.12) 0 1px, transparent 1px 22px);\n\n    mix-blend-mode: multiply;\n\n  }
 
   .footer { margin-top: 18px; color: #64748b; font-size: 11px; }
 
@@ -837,8 +799,6 @@ export default function ReportsPage() {
         <div class="page">
 
           <div class="watermark"></div>
-
-          <div class="watermark-text">TIMEFLOW</div>
 
           <div class="header-band">
 
