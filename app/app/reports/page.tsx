@@ -784,7 +784,7 @@ export default function ReportsPage() {
 
   td.value { width: 120px; text-align: right; font-weight: 600; }
 
-  .watermark {\n\n    position: absolute;\n\n    inset: 0;\n\n    pointer-events: none;\n\n    opacity: 0.65;\n\n    background-image: url("data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"220\" height=\"220\" viewBox=\"0 0 220 220\"%3E%3Cg fill=\"none\" stroke=\"%230f172a\" stroke-opacity=\\"0.55\\" stroke-width=\"1\"%3E%3Cpath d=\"M-10 40 C 40 10, 80 70, 130 40 S 220 10, 260 40\"/%3E%3Cpath d=\"M-10 80 C 40 50, 80 110, 130 80 S 220 50, 260 80\"/%3E%3Cpath d=\"M-10 120 C 40 90, 80 150, 130 120 S 220 90, 260 120\"/%3E%3Cpath d=\"M-10 160 C 40 130, 80 190, 130 160 S 220 130, 260 160\"/%3E%3Cpath d=\"M-10 200 C 40 170, 80 230, 130 200 S 220 170, 260 200\"/%3E%3C/g%3E%3C/svg%3E");\n\n    background-size: 220px 220px;\n\n  }
+  .watermark {\n\n    position: absolute;\n\n    inset: 0;\n\n    pointer-events: none;\n\n    opacity: 0.85;\n\n    background-image: url("data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"220\" height=\"220\" viewBox=\"0 0 220 220\"%3E%3Cg fill=\"none\" stroke=\\"%23050b1a\\" stroke-opacity=\\"0.55\\" stroke-width=\"1\"%3E%3Cpath d=\"M-10 40 C 40 10, 80 70, 130 40 S 220 10, 260 40\"/%3E%3Cpath d=\"M-10 80 C 40 50, 80 110, 130 80 S 220 50, 260 80\"/%3E%3Cpath d=\"M-10 120 C 40 90, 80 150, 130 120 S 220 90, 260 120\"/%3E%3Cpath d=\"M-10 160 C 40 130, 80 190, 130 160 S 220 130, 260 160\"/%3E%3Cpath d=\"M-10 200 C 40 170, 80 230, 130 200 S 220 170, 260 200\"/%3E%3C/g%3E%3C/svg%3E");\n\n    background-size: 220px 220px;\n\n  }
 
   .footer { margin-top: 18px; color: #64748b; font-size: 11px; }
 
