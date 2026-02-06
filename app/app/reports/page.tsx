@@ -237,7 +237,8 @@ export default function ReportsPage() {
 
         users: Set<string>;
 
-        userMinutes: Map<string, number>;`r`n        dayMinutes: Map<string, number>;
+        userMinutes: Map<string, number>;
+        dayMinutes: Map<string, number>;
 
       }
 
@@ -307,7 +308,16 @@ export default function ReportsPage() {
 
       setUserTotals(totals);
 
-      setProjectUserMinutes(perProjectUsers);`r`n      const perProjectDays: Record<string, Record<string, number>> = {};`r`n      buckets.forEach((entry) => {`r`n        const dayMap: Record<string, number> = {};`r`n        entry.dayMinutes.forEach((mins, day) => {`r`n          dayMap[day] = mins;`r`n        });`r`n        perProjectDays[entry.project.id] = dayMap;`r`n      });`r`n      setProjectDayMinutes(perProjectDays);
+      setProjectUserMinutes(perProjectUsers);
+      const perProjectDays: Record<string, Record<string, number>> = {};
+      buckets.forEach((entry) => {
+        const dayMap: Record<string, number> = {};
+        entry.dayMinutes.forEach((mins, day) => {
+          dayMap[day] = mins;
+        });
+        perProjectDays[entry.project.id] = dayMap;
+      });
+      setProjectDayMinutes(perProjectDays);
 
     };
 
@@ -331,7 +341,8 @@ export default function ReportsPage() {
 
         const users = new Set<string>();
 
-        const userMinutes = new Map<string, number>();`r`n        const dayMinutes = new Map<string, number>();
+        const userMinutes = new Map<string, number>();
+        const dayMinutes = new Map<string, number>();
 
 
 
@@ -349,7 +360,16 @@ export default function ReportsPage() {
 
           users.add(uid);
 
-          userMinutes.set(uid, (userMinutes.get(uid) ?? 0) + mins);`r`n`r`n          const days = data?.days ?? {};`r`n          if (days && typeof days === "object") {`r`n            Object.entries(days as Record<string, number>).forEach(([day, value]) => {`r`n              const dayMinutesValue = Number(value ?? 0);`r`n              if (Number.isNaN(dayMinutesValue)) return;`r`n              dayMinutes.set(day, (dayMinutes.get(day) ?? 0) + dayMinutesValue);`r`n            });`r`n          }
+          userMinutes.set(uid, (userMinutes.get(uid) ?? 0) + mins);
+
+          const days = data?.days ?? {};
+          if (days && typeof days === "object") {
+            Object.entries(days as Record<string, number>).forEach(([day, value]) => {
+              const dayMinutesValue = Number(value ?? 0);
+              if (Number.isNaN(dayMinutesValue)) return;
+              dayMinutes.set(day, (dayMinutes.get(day) ?? 0) + dayMinutesValue);
+            });
+          }
 
         });
 
