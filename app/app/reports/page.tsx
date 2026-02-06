@@ -960,7 +960,7 @@ export default function ReportsPage() {
 
 
 
-    const w = window.open("", "_blank", "width=1200,height=900");
+        const w = window.open("", "_blank", "width=1200,height=900");
     const w2 = selectedProjectId ? window.open("", "_blank", "width=1200,height=900") : null;
 
     if (!w) return;
@@ -968,6 +968,10 @@ export default function ReportsPage() {
     w.document.write(html);
 
     w.document.close();
+
+    if (selectedProjectId && !w2) {
+      alert("Разрешите всплывающие окна, чтобы скачать второй отчёт.");
+    }
 
     if (selectedProjectId && w2) {
       const dayHtml = `
