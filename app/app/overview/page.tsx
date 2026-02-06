@@ -163,7 +163,7 @@ function ProjectSelect({ value, projects, onChange }: ProjectSelectProps) {
             Все проекты
           </button>
           <div className="mt-2 max-h-[260px] overflow-y-auto pr-1">
-            {projects.map((p) => (
+            {projects.map((p: any) => (
               <button
                 key={p.id}
                 type="button"
@@ -312,13 +312,13 @@ export default function OverviewPage() {
       const savedMain = localStorage.getItem("overviewProjectId") ?? "";
       const savedChat = localStorage.getItem("overviewChatProjectId") ?? "";
 
-      const isMainValid = selectedProjectId && list.some((p) => p.id === selectedProjectId);
-      const isSavedMainValid = savedMain && list.some((p) => p.id === savedMain);
+      const isMainValid = selectedProjectId && list.some((p: any) => p.id === selectedProjectId);
+      const isSavedMainValid = savedMain && list.some((p: any) => p.id === savedMain);
       const nextMain = isMainValid ? selectedProjectId : isSavedMainValid ? savedMain : list[0].id;
       if (nextMain && nextMain !== selectedProjectId) setSelectedProjectId(nextMain);
 
-      const isChatValid = chatProjectId && list.some((p) => p.id === chatProjectId);
-      const isSavedChatValid = savedChat && list.some((p) => p.id === savedChat);
+      const isChatValid = chatProjectId && list.some((p: any) => p.id === chatProjectId);
+      const isSavedChatValid = savedChat && list.some((p: any) => p.id === savedChat);
       const nextChat = isChatValid ? chatProjectId : isSavedChatValid ? savedChat : list[0].id;
       if (nextChat && nextChat !== chatProjectId) setChatProjectId(nextChat);
     });
@@ -676,7 +676,7 @@ export default function OverviewPage() {
       return;
     }
 
-    const ownedIds = selectedProjectId ? [selectedProjectId] : projects.map((p) => p.id);
+    const ownedIds = selectedProjectId ? [selectedProjectId] : projects.map((p: any) => p.id);
     if (!ownedIds.length) {
       setOverdue([]);
       setUserNames({});
