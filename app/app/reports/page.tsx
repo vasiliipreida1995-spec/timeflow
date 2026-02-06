@@ -8,7 +8,7 @@ import { onAuthStateChanged } from "firebase/auth";
 
 import { collection, collectionGroup, getDocs, query, where } from "firebase/firestore";
 
-import { auth, db } from "../../../lib/firebase";
+import { auth, db } from "../../../lib/firebase";`r`nimport { escapeHtml } from "../../../lib/escapeHtml";
 
 import { safeOnSnapshot } from "../../../lib/firestoreSafe";
 
@@ -551,7 +551,7 @@ export default function ReportsPage() {
         (p, index) => `
           <tr>
             <td class="num">${index + 1}</td>
-            <td class="name">${p.name}</td>
+            <td class="name">${escapeHtml(String(p.name))}</td>
             <td class="value">${formatHours(p.minutes)} </td>
           </tr>
         `
@@ -568,7 +568,7 @@ export default function ReportsPage() {
         (u, index) => `
           <tr>
             <td class="num">${index + 1}</td>
-            <td class="name">${u.name}</td>
+            <td class="name">${escapeHtml(String(u.name))}</td>
             <td class="value">${formatHours(u.minutes)} </td>
           </tr>
         `
@@ -582,7 +582,7 @@ export default function ReportsPage() {
             ([day, minutes], index) => `
               <tr>
                 <td class="num">${index + 1}</td>
-                <td class="name">${dayLabelFromKey(day)}</td>
+                <td class="name">${escapeHtml(dayLabelFromKey(day))}</td>
                 <td class="value">${formatHours(minutes)} </td>
               </tr>
             `
@@ -604,12 +604,12 @@ export default function ReportsPage() {
         <div class="watermark"></div>
         <div class="header-band">
           <div class="header-row">
-            <div class="logo">${companyLabel}</div>
+            <div class="logo">${escapeHtml(String(companyLabel))}</div>
             <div>
               <div class="header-title">Отчёт по часам</div>
-              <div class="header-sub">${companyLabel}</div>
-              <div class="header-sub">${monthLabelFromKey(monthKey)}</div>
-              ${personLabel ? `<div class="header-sub">Сотрудник: ${personLabel}</div>` : ""}
+              <div class="header-sub">${escapeHtml(String(companyLabel))}</div>
+              <div class="header-sub">${escapeHtml(monthLabelFromKey(monthKey))}</div>
+              ${personLabel ? `<div class="header-sub">Сотрудник: ${escapeHtml(String(personLabel))}</div>` : ""}
             </div>
             <div class="doc-block">
               <div class="doc-label">Номер документа</div>
@@ -629,7 +629,7 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div class="table-title">${tableTitle}</div>
+          <div class="table-title">${escapeHtml(String(tableTitle))}</div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -656,12 +656,12 @@ export default function ReportsPage() {
         <div class="watermark"></div>
         <div class="header-band">
           <div class="header-row">
-            <div class="logo">${companyLabel}</div>
+            <div class="logo">${escapeHtml(String(companyLabel))}</div>
             <div>
               <div class="header-title">Отчёт по дням</div>
-              <div class="header-sub">${companyLabel}</div>
-              <div class="header-sub">${monthLabelFromKey(monthKey)}</div>
-              <div class="header-sub">Проект: ${projectLabel}</div>
+              <div class="header-sub">${escapeHtml(String(companyLabel))}</div>
+              <div class="header-sub">${escapeHtml(monthLabelFromKey(monthKey))}</div>
+              <div class="header-sub">Проект: ${escapeHtml(String(projectLabel))}</div>
             </div>
             <div class="doc-block">
               <div class="doc-label">Номер документа</div>

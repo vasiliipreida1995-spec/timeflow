@@ -58,7 +58,7 @@ export default function RegisterPage() {
               placeholder="you@email.com"
             />
           </label>
-          <label className="grid gap-2">\n            <span className="text-xs text-muted">Пароль</span>\n            <input\n              className="input"\n              type="password"
+          <label className="grid gap-2">`r`n            <span className="text-xs text-muted">Пароль</span>`r`n            <input`r`n              className="input"`r`n              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Минимум 6 символов"
