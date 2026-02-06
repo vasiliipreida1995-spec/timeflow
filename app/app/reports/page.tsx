@@ -606,21 +606,17 @@ export default function ReportsPage() {
     const tableTitle = isUserReport ? "Проекты" : "Сотрудники";
     const tableRows = isUserReport ? projectRows : peopleRows;
 
-    const pageHtml = `
+        const pageHtml = `
       <div class="page">
-        <div class="watermark"></div>
         <div class="header-band">
           <div class="header-row">
-            <div class="logo">${escapeHtml(String(companyLabel))}</div>
-            <div>
-              <div class="header-title">Отчёт по часам</div>
-              <div class="header-sub">${escapeHtml(String(companyLabel))}</div>
+            <div class="logo">${escapeHtml(String(companyLabel)).slice(0, 24)}</div>
+            <div class="header-copy">
+              <div class="header-title">${escapeHtml(String(projectLabel))}</div>
+              <div class="header-sub">Отчёт по рабочим часам</div>
+              <div class="header-sub">Документ № ${docNumber}</div>
               <div class="header-sub">${escapeHtml(monthLabelFromKey(monthKey))}</div>
               ${personLabel ? `<div class="header-sub">Сотрудник: ${escapeHtml(String(personLabel))}</div>` : ""}
-            </div>
-            <div class="doc-block">
-              <div class="doc-label">Номер документа</div>
-              <div class="doc-line"><span class="doc-num">${docNumber}</span></div>
             </div>
           </div>
         </div>
@@ -631,7 +627,7 @@ export default function ReportsPage() {
               <div class="kpi-value">${peopleCount}</div>
             </div>
             <div class="kpi">
-              <div class="kpi-label">Часов всего</div>
+              <div class="kpi-label">Всего часов</div>
               <div class="kpi-value">${totalHours}</div>
             </div>
           </div>
@@ -641,86 +637,63 @@ export default function ReportsPage() {
             <table>
               <thead>
                 <tr>
-                  <th style="width: 36px;">#</th>
                   <th>${tableTitle === "Проекты" ? "Проект" : "Сотрудник"}</th>
-                  <th style="width: 120px; text-align: right;">Часы</th>
+                  <th class="value">Часы</th>
                 </tr>
               </thead>
               <tbody>
-                ${tableRows || `<tr><td class="num"></td><td colspan="2">Нет данных</td></tr>`}
+                ${tableRows || `<tr><td colspan="2">Нет данных</td></tr>`}
               </tbody>
             </table>
           </div>
-
-          <div class="footer">Сформировано автоматически в Timeflow • ${new Date().toLocaleString("ru-RU")}</div>
         </div>
       </div>
     `;
 
     const dayHtml = selectedProjectId
       ? `
-      <div class="page">
-        <div class="watermark"></div>
-        <div class="header-band">
-          <div class="header-row">
-            <div class="logo">${escapeHtml(String(companyLabel))}</div>
-            <div>
-              <div class="header-title">Отчёт по дням</div>
-              <div class="header-sub">${escapeHtml(String(companyLabel))}</div>
-              <div class="header-sub">${escapeHtml(monthLabelFromKey(monthKey))}</div>
-              <div class="header-sub">Проект: ${escapeHtml(String(projectLabel))}</div>
-            </div>
-            <div class="doc-block">
-              <div class="doc-label">Номер документа</div>
-              <div class="doc-line"><span class="doc-num">${docNumber}-D</span></div>
-            </div>
-          </div>
+      <div class="page page--details">
+        <div class="details-title">Детализация по дням</div>
+        <div class="details-meta">Проект: ${escapeHtml(String(projectLabel))}</div>
+        <div class="details-meta">Документ № ${docNumber}</div>
+        <div class="details-meta">${escapeHtml(monthLabelFromKey(monthKey))}</div>
+        <div class="details-gap"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th class="value">Часы</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${dayRows || `<tr><td colspan="2">Нет данных по дням</td></tr>`}
+            </tbody>
+          </table>
         </div>
-        <div class="content">
-          <div class="kpi-row">
-            <div class="kpi">
-              <div class="kpi-label">Дней</div>
-              <div class="kpi-value">${dayRows ? dayRows.match(/<tr>/g)?.length ?? 0 : 0}</div>
-            </div>
-            <div class="kpi">
-              <div class="kpi-label">Часов всего</div>
-              <div class="kpi-value">${totalHours}</div>
-            </div>
+        <div class="details-spacer"></div>
+        <div class="sign-row">
+          <div>
+            <div>Руководитель проекта</div>
+            <div class="sign-name">${escapeHtml(String(companyLabel))}</div>
           </div>
-          <div class="table-title">Дни</div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 36px;">#</th>
-                  <th>Дата</th>
-                  <th style="width: 120px; text-align: right;">Часы</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${dayRows || `<tr><td class="num"></td><td colspan="2">Нет данных</td></tr>`}
-              </tbody>
-            </table>
-          </div>
-          <div class="footer">Сформировано автоматически в Timeflow • ${new Date().toLocaleString("ru-RU")}</div>
+          <div class="stamp">М.П.</div>
         </div>
       </div>
       `
       : "";
-
-    const html = `
+const html = `
       <!doctype html>
       <html lang="ru">
       <head>
         <meta charset="utf-8" />
         <title>Timeflow Report</title>
-        <style>
-  :root { color-scheme: light; }
+        <style>  :root { color-scheme: light; }
   body {
-    font-family: "Segoe UI", "Inter", Tahoma, sans-serif;
+    font-family: "Roboto", "Segoe UI", "Inter", Tahoma, sans-serif;
     margin: 0;
     color: #0f172a;
-    background: #f6f7fb;
+    background: #ffffff;
   }
   .page {
     position: relative;
@@ -731,7 +704,7 @@ export default function ReportsPage() {
   .header-band {
     background: #1f2937;
     color: #ffffff;
-    padding: 36px 40px 30px;
+    padding: 36px 40px;
   }
   .header-row {
     display: flex;
@@ -739,8 +712,8 @@ export default function ReportsPage() {
     gap: 24px;
   }
   .logo {
-    width: 84px;
-    height: 84px;
+    width: 160px;
+    height: 160px;
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.18);
@@ -753,40 +726,25 @@ export default function ReportsPage() {
     text-align: center;
     padding: 8px;
   }
+  .header-copy { display: flex; flex-direction: column; }
   .header-title { font-size: 22px; font-weight: 700; }
   .header-sub { margin-top: 6px; font-size: 13px; color: #cbd5f5; }
-  .doc-block { margin-left: auto; min-width: 220px; }
-  .doc-label { font-size: 11px; color: #cbd5f5; margin-bottom: 6px; }
-  .doc-line {
-    position: relative;
-    height: 22px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-    background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0 1px, transparent 1px 8px);
-  }
-  .doc-num {
-    position: absolute;
-    right: 0;
-    bottom: 2px;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    padding-left: 8px;
-    background: #1f2937;
-  }
-  .content { padding: 36px 40px 40px; }
+  .content { padding: 36px 40px; }
   .kpi-row {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 36px;
   }
   .kpi {
-    padding: 16px 18px;
+    width: 200px;
+    padding: 18px;
     border-radius: 14px;
     border: 1px solid #e2e8f0;
     background: #f8fafc;
   }
-  .kpi-label { font-size: 10px; color: #64748b; letter-spacing: 0.14em; text-transform: uppercase; }
-  .kpi-value { margin-top: 8px; font-size: 22px; font-weight: 700; color: #1f2937; }
+  .kpi-label { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.14em; }
+  .kpi-value { margin-top: 10px; font-size: 20px; font-weight: 700; color: #1f2937; }
   .table-title { font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 12px; }
   .table-wrap { border: 1px solid #d8dee8; border-radius: 12px; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -799,19 +757,29 @@ export default function ReportsPage() {
   }
   tbody td { padding: 10px 12px; border-bottom: 1px solid #eef2f7; }
   tbody tr:last-child td { border-bottom: none; }
-  td.num { width: 36px; color: #64748b; }
   td.value { width: 120px; text-align: right; font-weight: 600; }
-  .watermark {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.85;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"220\" height=\"220\" viewBox=\"0 0 220 220\"%3E%3Cg fill=\"none\" stroke=\"%23050b1a\" stroke-opacity=\"0.8\" stroke-width=\"1\"%3E%3Cpath d=\"M-10 40 C 40 10, 80 70, 130 40 S 220 10, 260 40\"/%3E%3Cpath d=\"M-10 80 C 40 50, 80 110, 130 80 S 220 50, 260 80\"/%3E%3Cpath d=\"M-10 120 C 40 90, 80 150, 130 120 S 220 90, 260 120\"/%3E%3Cpath d=\"M-10 160 C 40 130, 80 190, 130 160 S 220 130, 260 160\"/%3E%3Cpath d=\"M-10 200 C 40 170, 80 230, 130 200 S 220 170, 260 200\"/%3E%3C/g%3E%3C/svg%3E");
-    background-size: 220px 220px;
+  .page--details { padding: 36px; }
+  .details-title { font-size: 18px; font-weight: 700; color: #1f2937; }
+  .details-meta { margin-top: 6px; font-size: 12px; color: #475569; }
+  .details-gap { height: 24px; }
+  .details-spacer { height: 48px; }
+  .sign-row {
+    margin-top: 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
   }
-  .footer { margin-top: 18px; color: #64748b; font-size: 11px; }
-  @media print { body { background: #fff; } }
-        </style>
+  .sign-name { margin-top: 32px; font-weight: 700; }
+  .stamp {
+    width: 120px;
+    height: 120px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 24px;
+  }</style>
       </head>
       <body>
         ${pageHtml}
