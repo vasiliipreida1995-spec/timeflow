@@ -3,8 +3,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, collectionGroup, query, where, doc, getDoc, getDocs, orderBy, limit } from "firebase/firestore";
+import { collection, collectionGroup, query, where } from "firebase/firestore";
 import { auth, db } from "../../../lib/firebase";
 import { safeOnSnapshot } from "../../../lib/firestoreSafe";
 
@@ -31,18 +32,6 @@ function labelFromMonthKey(key: string) {
   if (!year || !month) return key;
   const date = new Date(year, month - 1, 1);
   return date.toLocaleDateString("ru-RU", { month: "long" });
-}
-
-function formatDateLabel(date: Date | null) {
-  if (!date) return "";
-  const now = new Date();
-  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startYesterday = new Date(startToday);
-  startYesterday.setDate(startYesterday.getDate() - 1);
-  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  if (dayStart.getTime() === startToday.getTime()) return "Сегодня";
-  if (dayStart.getTime() === startYesterday.getTime()) return "Вчера";
-  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 }
 
 function formatClock(date: Date | null) {
@@ -244,6 +233,7 @@ export default function OverviewPage() {
   const isAtBottomRef = useRef(true);
   const initialLoadRef = useRef(true);
   const wsRef = useRef<WebSocket | null>(null);
+  const chatMessagesRef = useRef<typeof chatMessages>([]);
   const typingTimeoutsRef = useRef<Record<string, number>>({});
 
   const scrollToBottom = () => {
@@ -260,7 +250,6 @@ export default function OverviewPage() {
   const [chatAttachmentUrl, setChatAttachmentUrl] = useState("");
   const [chatAttachmentName, setChatAttachmentName] = useState("");
   const [showAttachment, setShowAttachment] = useState(false);
-  const typingTimerRef = useRef<number | null>(null);
   const [nowMs, setNowMs] = useState(0);
 
   useEffect(() => {
@@ -271,8 +260,13 @@ export default function OverviewPage() {
   }, []);
 
   useEffect(() => {
-    if (!chatMessages.length) return;
-    const last = chatMessages[chatMessages.length - 1];
+    chatMessagesRef.current = chatMessages;
+  }, [chatMessages]);
+
+  useEffect(() => {
+    const messages = chatMessagesRef.current;
+    if (!messages.length) return;
+    const last = messages[messages.length - 1];
     if (last && last.senderId !== userId && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "read", projectId: chatProjectId, messageId: last.id }));
     }
@@ -915,7 +909,7 @@ export default function OverviewPage() {
               const threshold = 24;
               isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
               if (isAtBottomRef.current) {
-                const last = chatMessages[chatMessages.length - 1];
+                const last = messages[messages.length - 1];
                 if (last && last.senderId !== userId && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                   wsRef.current.send(JSON.stringify({ type: "read", projectId: chatProjectId, messageId: last.id }));
                 }
@@ -964,14 +958,12 @@ export default function OverviewPage() {
                   const prev = index > 0 ? regularMessages[index - 1] : null;
                   const prevSender = prev?.senderId ?? null;
                   const isSameSender = !!prevSender && msg.senderId === prevSender;
-                  const prevDate = prev?.createdAt ? (prev.createdAt instanceof Date ? prev.createdAt : new Date(prev.createdAt)) : null;
-                  const showDate = !prevDate || !created || prevDate.toDateString() !== created.toDateString();
                   return (
                     <div key={`${msg.id ?? msg.tempId ?? index}`} className={`chat-row group flex items-start gap-3${isMine ? " is-mine" : ""}`}>
                       {!isSameSender && (
                         <>
                           {chatUserAvatars[msg.senderId ?? ""] ? (
-                            <img src={chatUserAvatars[msg.senderId ?? ""]} alt="" className="h-9 w-9 rounded-full object-cover" />
+                            <Image src={chatUserAvatars[msg.senderId ?? ""]} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
                           ) : (
                             <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
                           )}

@@ -206,7 +206,7 @@ wss.on("connection", async (ws, req) => {
         broadcast(pid, { type: "typing", userId: uid, isTyping: !!payload.isTyping });
       }
     });
-  } catch (e) {
+  } catch {
     ws.close(1008, "Unauthorized");
   }
 });

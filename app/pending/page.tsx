@@ -9,7 +9,7 @@ import { subscribeWebUser } from "../../lib/webUser";
 
 export default function PendingPage() {
   const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
+  const [, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
     let unsubUser: (() => void) | null = null;

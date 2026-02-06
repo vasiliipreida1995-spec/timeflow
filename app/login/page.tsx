@@ -33,7 +33,7 @@ export default function LoginPage() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       router.replace("/app");
-    } catch (e: unknown) {
+    } catch {
       setError("Ошибка входа через Google");
     } finally {
       setLoading(false);

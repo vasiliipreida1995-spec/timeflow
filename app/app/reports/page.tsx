@@ -142,6 +142,7 @@ export default function ReportsPage() {
   const [projectStats, setProjectStats] = useState<ProjectStat[]>([]);
 
   const [userTotals, setUserTotals] = useState<UserTotal[]>([]);
+  const userIdsKey = useMemo(() => userTotals.map((u) => u.userId).join("|"), [userTotals]);
 
   const [projectUserMinutes, setProjectUserMinutes] = useState<Record<string, Record<string, number>>>({});
   const [projectDayMinutes, setProjectDayMinutes] = useState<Record<string, Record<string, number>>>({});
@@ -351,7 +352,6 @@ export default function ReportsPage() {
 
       return safeOnSnapshot(q, (snap) => {
         if (!("forEach" in snap)) return;
-        const querySnap = snap as QuerySnapshot<DocumentData>;
         let total = 0;
 
         const users = new Set<string>();
@@ -412,7 +412,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
 
-    const ids = userTotals.map((u) => u.userId);
+    const ids = userIdsKey ? userIdsKey.split("|") : [];
 
     if (!ids.length) return;
 
@@ -456,9 +456,7 @@ export default function ReportsPage() {
 
     };
 
-  }, [userTotals.length]);
-
-
+  }, [userIdsKey]);
 
   const selectedProject = selectedProjectId ? projects.find((p) => p.id === selectedProjectId) : null;
 
@@ -467,12 +465,6 @@ export default function ReportsPage() {
 
 
   const totalMinutes = projectStats.reduce((sum, p) => sum + p.minutes, 0);
-
-  const uniqueUsers = new Set(userTotals.map((u) => u.userId)).size;
-
-  const avgPerUser = uniqueUsers ? totalMinutes / uniqueUsers : 0;
-
-  const avgPerProject = projectStats.length ? totalMinutes / projectStats.length : 0;
 
 
 

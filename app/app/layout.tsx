@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
@@ -23,21 +24,23 @@ type ProjectDoc = { name?: string | null; ownerId?: string | null };
 
 type ProjectMemberDoc = { role?: string | null; projectId?: string | null };
 
-type ProfileResponse = { profile?: { phone?: string | null; address?: string | null } | null };
-
-type ProfileHoursResponse = { totalMinutes?: number | null };const NAV_ITEMS = [
+const NAV_ITEMS = [
   { href: "/app/overview", label: "Control Room", desc: "Пульс по часам и проектам" },
   { href: "/app/projects", label: "Projects", desc: "Портфель работ и загрузок" },
   { href: "/app/team", label: "Team", desc: "Роли, смены, доступы" },
   { href: "/app/reports", label: "Reports", desc: "Экспорт и аналитика" },
   { href: "/app/settings", label: "Settings", desc: "Политики и интеграции" },
-];const SETTINGS_NAV = [
+];
+
+const SETTINGS_NAV = [
   { href: "/app/settings?section=org", label: "Организация" },
   { href: "/app/settings?section=limits", label: "Лимиты" },
   { href: "/app/settings?section=templates", label: "Шаблоны" },
   { href: "/app/settings?section=communications", label: "Коммуникации" },
   { href: "/app/settings?section=integrations", label: "Интеграции" },
-];export default function AppLayout({ children }: { children: React.ReactNode }) {
+];
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -375,7 +378,7 @@ type ProfileHoursResponse = { totalMinutes?: number | null };const NAV_ITEMS = [
                           className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition hover:bg-white/5"
                         >
                           {u.avatar ? (
-                            <img src={u.avatar} alt="" className="h-8 w-8 rounded-full object-cover" />
+                            <Image src={u.avatar} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
                           ) : (
                             <div className="h-8 w-8 rounded-full bg-[rgba(125,211,167,0.25)]" />
                           )}
@@ -450,12 +453,7 @@ type ProfileHoursResponse = { totalMinutes?: number | null };const NAV_ITEMS = [
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 {profileAvatar && !brokenAvatar ? (
-                  <img
-                    src={profileAvatar}
-                    alt=""
-                    className="h-12 w-12 rounded-full object-cover"
-                    onError={() => setBrokenAvatar(true)}
-                  />
+                  <Image src={profileAvatar} alt="" width={48} height={48} className="h-12 w-12 rounded-full object-cover" onError={() => setBrokenAvatar(true)} />
                 ) : (
                   <div className="h-12 w-12 rounded-full bg-[rgba(125,211,167,0.25)]" />
                 )}

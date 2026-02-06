@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import {
   addDoc,
   collection,
@@ -16,7 +17,6 @@ import {
   query,
   runTransaction,
   serverTimestamp,
-  setDoc,
   Timestamp,
   updateDoc,
   where,
@@ -168,7 +168,7 @@ export default function ProjectPage() {
       {tab === "chat" && <ChatTab projectId={projectId} currentUserId={userId} isManager={isManager} />}
       {tab === "pinned" && <PinnedTab projectId={projectId} isManager={isManager} />}
       {tab === "schedule" && <ScheduleTab projectId={projectId} userId={userId} isManager={isManager} />}
-      {tab === "people" && <PeopleTab projectId={projectId} projectName={projectName} isManager={isManager} />}
+      {tab === "people" && <PeopleTab projectId={projectId} projectName={projectName} />}
       {tab === "hours" && <HoursTab projectId={projectId} currentUserId={userId} />}
     </div>
   );
@@ -356,12 +356,7 @@ function ChatTab({
                     {showAvatar && (
                       <>
                         {hasAvatar ? (
-                          <img
-                            src={userAvatars[avatarId]}
-                            alt=""
-                            className="h-9 w-9 rounded-full object-cover"
-                            onError={() => setBrokenAvatars((prev) => ({ ...prev, [avatarId]: true }))}
-                          />
+                          <Image src={userAvatars[avatarId]} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover" onError={() => setBrokenAvatars((prev) => ({ ...prev, [avatarId]: true }))} />
                         ) : (
                           <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
                         )}
@@ -721,7 +716,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
   );
 }
 
-function PeopleTab({ projectId, projectName, isManager }: { projectId: string; projectName: string; isManager: boolean }) {
+function PeopleTab({ projectId, projectName }: { projectId: string; projectName: string }) {
   const [members, setMembers] = useState<any[]>([]);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [userNames, setUserNames] = useState<Record<string, string>>({});
@@ -926,12 +921,7 @@ function PeopleTab({ projectId, projectName, isManager }: { projectId: string; p
             >
               <div className="flex items-center gap-3">
                 {hasAvatar ? (
-                  <img
-                    src={userAvatars[avatarId]}
-                    alt=""
-                    className="h-9 w-9 rounded-full object-cover"
-                    onError={() => setBrokenAvatars((prev) => ({ ...prev, [avatarId]: true }))}
-                  />
+                  <Image src={userAvatars[avatarId]} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover" onError={() => setBrokenAvatars((prev) => ({ ...prev, [avatarId]: true }))} />
                 ) : (
                   <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
                 )}
@@ -952,12 +942,7 @@ function PeopleTab({ projectId, projectName, isManager }: { projectId: string; p
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 {userAvatars[selectedId] && !brokenAvatars[selectedId] ? (
-                  <img
-                    src={userAvatars[selectedId]}
-                    alt=""
-                    className="h-12 w-12 rounded-full object-cover"
-                    onError={() => setBrokenAvatars((prev) => ({ ...prev, [selectedId]: true }))}
-                  />
+                  <Image src={userAvatars[selectedId]} alt="" width={48} height={48} className="h-12 w-12 rounded-full object-cover" onError={() => setBrokenAvatars((prev) => ({ ...prev, [selectedId]: true }))} />
                 ) : (
                   <div className="h-12 w-12 rounded-full bg-[rgba(125,211,167,0.25)]" />
                 )}
@@ -1177,45 +1162,6 @@ function UserName({ userId }: { userId: string }) {
 
   if (!loaded) return <span />;
   return <span>{name ?? "Нет имени"}</span>;
-}
-async function updateOrCreateMember(projectId: string, userId: string) {
-  const memberId = `${projectId}_${userId}`;
-  const memberRef = doc(db, "project_members", memberId);
-  await setDoc(
-    memberRef,
-    {
-      projectId,
-      userId,
-      role: "pending",
-      createdAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
-}
-
-async function getProjectAdmins(projectId: string) {
-  const adminIds = new Set<string>();
-
-  const projectDoc = await getDoc(doc(db, "projects", projectId));
-  if (projectDoc.exists()) {
-    const ownerId = (projectDoc.data() as any)?.ownerId;
-    if (ownerId) adminIds.add(ownerId);
-  }
-
-  const adminsSnap = await getDocs(
-    query(
-      collection(db, "project_members"),
-      where("projectId", "==", projectId),
-      where("role", "==", "admin")
-    )
-  );
-
-  adminsSnap.forEach((d) => {
-    const data = d.data() as any;
-    if (data?.userId) adminIds.add(data.userId);
-  });
-
-  return Array.from(adminIds);
 }
 
 function formatDate(d: Date) {

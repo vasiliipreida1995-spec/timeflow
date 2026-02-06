@@ -18,7 +18,7 @@ export async function requireAdmin(request: NextRequest) {
       return { ok: false, status: 403, message: "Admin only" } as const;
     }
     return { ok: true, uid: decoded.uid } as const;
-  } catch (e) {
+  } catch {
     return { ok: false, status: 401, message: "Invalid token" } as const;
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
@@ -189,7 +190,7 @@ export default function TeamPage() {
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 {member.avatar ? (
-                  <img src={member.avatar} alt="" className="h-12 w-12 rounded-full object-cover" />
+                  <Image src={member.avatar} alt="" width={48} height={48} className="h-12 w-12 rounded-full object-cover" />
                 ) : (
                   <div className="h-12 w-12 rounded-full bg-[rgba(125,211,167,0.25)]" />
                 )}
