@@ -4,12 +4,12 @@ import "./globals.css";
 
 const display = Fraunces({
   variable: "--font-display",
-  subsets: ["latin", "cyrillic"],
+  subsets: ["latin"],
 });
 
 const body = Space_Grotesk({
   variable: "--font-body",
-  subsets: ["latin", "cyrillic"],
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
