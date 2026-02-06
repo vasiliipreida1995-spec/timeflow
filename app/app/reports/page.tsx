@@ -537,450 +537,177 @@ export default function ReportsPage() {
 
 
 
-  function downloadPdf() {
-
+    function downloadPdf() {
     const totalHours = formatHours(filteredTotalMinutes);
-
     const peopleCount = filteredPeopleCount;
 
-
-
     const projectRows = (selectedUserId
-
       ? perUserProjectRows
-
       : selectedProjectId
-
         ? projectStats.filter((p) => p.id === selectedProjectId)
-
         : projectStats
-
     )
-
       .map(
-
         (p, index) => `
-
           <tr>
-
             <td class="num">${index + 1}</td>
-
             <td class="name">${p.name}</td>
-
             <td class="value">${formatHours(p.minutes)} </td>
-
           </tr>
-
         `
-
       )
+      .join("");
 
+    const peopleRows = (selectedProjectId
+      ? filteredUserTotals
+      : selectedUserId
+        ? (selectedUser ? [selectedUser] : [])
+        : userTotals
+    )
+      .map(
+        (u, index) => `
+          <tr>
+            <td class="num">${index + 1}</td>
+            <td class="name">${u.name}</td>
+            <td class="value">${formatHours(u.minutes)} </td>
+          </tr>
+        `
+      )
       .join("");
 
     const dayRows = selectedProjectId
       ? Object.entries(projectDayMinutes[selectedProjectId] ?? {})
           .sort(([a], [b]) => a.localeCompare(b))
-          .map(([day, minutes], index) => `
-            <tr>
-              <td class="num">${index + 1}</td>
-              <td class="name">${dayLabelFromKey(day)}</td>
-              <td class="value">${formatHours(minutes)} </td>
-            </tr>
-          `)
+          .map(
+            ([day, minutes], index) => `
+              <tr>
+                <td class="num">${index + 1}</td>
+                <td class="name">${dayLabelFromKey(day)}</td>
+                <td class="value">${formatHours(minutes)} </td>
+              </tr>
+            `
+          )
           .join("")
       : "";
 
-
-
-    const peopleRows = (selectedProjectId
-
-      ? filteredUserTotals
-
-      : selectedUserId
-
-        ? (selectedUser ? [selectedUser] : [])
-
-        : userTotals
-
-    )
-
-      .map(
-
-        (u, index) => `
-
-          <tr>
-
-            <td class="num">${index + 1}</td>
-
-            <td class="name">${u.name}</td>
-
-            <td class="value">${formatHours(u.minutes)} </td>
-
-          </tr>
-
-        `
-
-      )
-
-      .join("");
-
-
-
     const projectLabel = selectedProject?.name ?? (selectedProjectId ? selectedProjectId : "Timeflow Ops");
-
     const personLabel = selectedUser?.name ?? (selectedUserId ? selectedUserId : "");
-
     const docNumber = `TF-${monthKey.replace("-", "")}-${(selectedProjectId || "ALL").slice(0, 6).toUpperCase()}-${new Date().getDate().toString().padStart(2, "0")}`;
-
     const companyLabel = companyName || "Timeflow Ops";
 
-
-
     const isUserReport = Boolean(selectedUserId);
-
     const tableTitle = isUserReport ? "Проекты" : "Сотрудники";
-
     const tableRows = isUserReport ? projectRows : peopleRows;
 
-
-
-    const html = `
-
-      <!doctype html>
-
-      <html lang="ru">
-
-      <head>
-
-        <meta charset="utf-8" />
-
-        <title>Timeflow Report</title>
-
-        <style>
-
-  :root { color-scheme: light; }
-
-  body {
-
-    font-family: "Segoe UI", "Inter", Tahoma, sans-serif;
-
-    margin: 0;
-
-    color: #0f172a;
-
-    background: #f6f7fb;
-
-  }
-
-  .page {
-
-    position: relative;
-
-    min-height: 100vh;
-
-    background: #ffffff;
-
-  }
-
-  .header-band {
-
-    background: #1f2937;
-
-    color: #ffffff;
-
-    padding: 36px 40px 30px;
-
-  }
-
-  .header-row {
-
-    display: flex;
-
-    align-items: flex-start;
-
-    gap: 24px;
-
-  }
-
-  .logo {
-
-    width: 84px;
-
-    height: 84px;
-
-    border-radius: 16px;
-
-    background: rgba(255, 255, 255, 0.1);
-
-    border: 1px solid rgba(255, 255, 255, 0.18);
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    font-weight: 700;
-
-    font-size: 12px;
-
-    line-height: 1.2;
-
-    text-align: center;
-
-    padding: 8px;
-
-  }
-
-  .header-title { font-size: 22px; font-weight: 700; }
-
-  .header-sub { margin-top: 6px; font-size: 13px; color: #cbd5f5; }
-
-  .doc-block { margin-left: auto; min-width: 220px; }
-
-  .doc-label { font-size: 11px; color: #cbd5f5; margin-bottom: 6px; }
-
-  .doc-line {
-
-    position: relative;
-
-    height: 22px;
-
-    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-
-    background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0 1px, transparent 1px 8px);
-
-  }
-
-  .doc-num {
-
-    position: absolute;
-
-    right: 0;
-
-    bottom: 2px;
-
-    font-size: 11px;
-
-    letter-spacing: 0.1em;
-
-    padding-left: 8px;
-
-    background: #1f2937;
-
-  }
-
-  .content { padding: 36px 40px 40px; }
-
-  .kpi-row {
-
-    display: grid;
-
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-
-    gap: 18px;
-
-    margin-bottom: 28px;
-
-  }
-
-  .kpi {
-
-    padding: 16px 18px;
-
-    border-radius: 14px;
-
-    border: 1px solid #e2e8f0;
-
-    background: #f8fafc;
-
-  }
-
-  .kpi-label { font-size: 10px; color: #64748b; letter-spacing: 0.14em; text-transform: uppercase; }
-
-  .kpi-value { margin-top: 8px; font-size: 22px; font-weight: 700; color: #1f2937; }
-
-  .table-title { font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 12px; }
-
-  .table-wrap { border: 1px solid #d8dee8; border-radius: 12px; overflow: hidden; }
-
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-
-  thead th {
-
-    text-align: left;
-
-    background: #4b5563;
-
-    color: #ffffff;
-
-    font-weight: 600;
-
-    padding: 10px 12px;
-
-  }
-
-  tbody td { padding: 10px 12px; border-bottom: 1px solid #eef2f7; }
-
-  tbody tr:last-child td { border-bottom: none; }
-
-  td.num { width: 36px; color: #64748b; }
-
-  td.value { width: 120px; text-align: right; font-weight: 600; }
-
-  .watermark {
-
-    position: absolute;
-
-    inset: 0;
-
-    pointer-events: none;
-
-    opacity: 0.85;
-
-    background-image: url("data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"220\" height=\"220\" viewBox=\"0 0 220 220\"%3E%3Cg fill=\"none\" stroke=\\"%23050b1a\\" stroke-opacity=\\"0.55\\" stroke-width=\"1\"%3E%3Cpath d=\"M-10 40 C 40 10, 80 70, 130 40 S 220 10, 260 40\"/%3E%3Cpath d=\"M-10 80 C 40 50, 80 110, 130 80 S 220 50, 260 80\"/%3E%3Cpath d=\"M-10 120 C 40 90, 80 150, 130 120 S 220 90, 260 120\"/%3E%3Cpath d=\"M-10 160 C 40 130, 80 190, 130 160 S 220 130, 260 160\"/%3E%3Cpath d=\"M-10 200 C 40 170, 80 230, 130 200 S 220 170, 260 200\"/%3E%3C/g%3E%3C/svg%3E");
-
-    background-size: 220px 220px;
-
-  }
-
-  .footer { margin-top: 18px; color: #64748b; font-size: 11px; }
-
-  @media print { body { background: #fff; } }
-
-</style>
-
-      </head>
-
-      <body>
-
-        <div class="page">
-
-          <div class="watermark"></div>
-
-          <div class="header-band">
-
-            <div class="header-row">
-
-              <div class="logo">${companyLabel}</div>
-
-              <div>
-
-                <div class="header-title">Отчёт по часам</div>
-
-                <div class="header-sub">${companyLabel}</div>
-
-                <div class="header-sub">${monthLabelFromKey(monthKey)}</div>
-
-                ${personLabel ? `<div class="header-sub">Сотрудник: ${personLabel}</div>` : ""}
-
-              </div>
-
-              <div class="doc-block">
-
-                <div class="doc-label">Номер документа</div>
-
-                <div class="doc-line"><span class="doc-num">${docNumber}</span></div>
-
-              </div>
-
+    const pageHtml = `
+      <div class="page">
+        <div class="watermark"></div>
+        <div class="header-band">
+          <div class="header-row">
+            <div class="logo">${companyLabel}</div>
+            <div>
+              <div class="header-title">Отчёт по часам</div>
+              <div class="header-sub">${companyLabel}</div>
+              <div class="header-sub">${monthLabelFromKey(monthKey)}</div>
+              ${personLabel ? `<div class="header-sub">Сотрудник: ${personLabel}</div>` : ""}
             </div>
-
+            <div class="doc-block">
+              <div class="doc-label">Номер документа</div>
+              <div class="doc-line"><span class="doc-num">${docNumber}</span></div>
+            </div>
           </div>
-
-          <div class="content">
-
-            <div class="kpi-row">
-
-              <div class="kpi">
-
-                <div class="kpi-label">Сотрудников</div>
-
-                <div class="kpi-value">${peopleCount}</div>
-
-              </div>
-
-              <div class="kpi">
-
-                <div class="kpi-label">Часов всего</div>
-
-                <div class="kpi-value">${totalHours}</div>
-
-              </div>
-
-            </div>
-
-
-
-            <div class="table-title">${tableTitle}</div>
-
-            <div class="table-wrap">
-
-              <table>
-
-                <thead>
-
-                  <tr>
-
-                    <th style="width: 36px;">#</th>
-
-                     <th>${tableTitle === "Проекты" ? "Проект" : "Сотрудник"}</th>
-
-                     <th style="width: 120px; text-align: right;">Часы</th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                   ${tableRows || `<tr><td class="num"></td><td colspan="2">Нет данных</td></tr>`}
-
-                </tbody>
-
-              </table>
-
-            </div>
-
-
-
-             <div class="footer">Сформировано автоматически в Timeflow • ${new Date().toLocaleString("ru-RU")}</div>
-
-          </div>
-
-          <script>window.print();</script>
-
         </div>
+        <div class="content">
+          <div class="kpi-row">
+            <div class="kpi">
+              <div class="kpi-label">Сотрудников</div>
+              <div class="kpi-value">${peopleCount}</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Часов всего</div>
+              <div class="kpi-value">${totalHours}</div>
+            </div>
+          </div>
 
-      </body>
+          <div class="table-title">${tableTitle}</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 36px;">#</th>
+                  <th>${tableTitle === "Проекты" ? "Проект" : "Сотрудник"}</th>
+                  <th style="width: 120px; text-align: right;">Часы</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows || `<tr><td class="num"></td><td colspan="2">Нет данных</td></tr>`}
+              </tbody>
+            </table>
+          </div>
 
-      </html>
-
+          <div class="footer">Сформировано автоматически в Timeflow • ${new Date().toLocaleString("ru-RU")}</div>
+        </div>
+      </div>
     `;
 
+    const dayHtml = selectedProjectId
+      ? `
+      <div class="page">
+        <div class="watermark"></div>
+        <div class="header-band">
+          <div class="header-row">
+            <div class="logo">${companyLabel}</div>
+            <div>
+              <div class="header-title">Отчёт по дням</div>
+              <div class="header-sub">${companyLabel}</div>
+              <div class="header-sub">${monthLabelFromKey(monthKey)}</div>
+              <div class="header-sub">Проект: ${projectLabel}</div>
+            </div>
+            <div class="doc-block">
+              <div class="doc-label">Номер документа</div>
+              <div class="doc-line"><span class="doc-num">${docNumber}-D</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="kpi-row">
+            <div class="kpi">
+              <div class="kpi-label">Дней</div>
+              <div class="kpi-value">${dayRows ? dayRows.match(/<tr>/g)?.length ?? 0 : 0}</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Часов всего</div>
+              <div class="kpi-value">${totalHours}</div>
+            </div>
+          </div>
+          <div class="table-title">Дни</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 36px;">#</th>
+                  <th>Дата</th>
+                  <th style="width: 120px; text-align: right;">Часы</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${dayRows || `<tr><td class="num"></td><td colspan="2">Нет данных</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+          <div class="footer">Сформировано автоматически в Timeflow • ${new Date().toLocaleString("ru-RU")}</div>
+        </div>
+      </div>
+      `
+      : "";
 
-
-        const w = window.open("", "_blank", "width=1200,height=900");
-    const w2 = selectedProjectId ? window.open("", "_blank", "width=1200,height=900") : null;
-
-    if (!w) return;
-
-    w.document.write(html);
-
-    w.document.close();
-
-    if (selectedProjectId && !w2) {
-      alert("Разрешите всплывающие окна, чтобы скачать второй отчёт.");
-    }
-
-    if (selectedProjectId && w2) {
-      const dayHtml = `
-        <!doctype html>
-        <html lang="ru">
-        <head>
-          <meta charset="utf-8" />
-          <title>Timeflow Day Report</title>
-          <style>
+    const html = `
+      <!doctype html>
+      <html lang="ru">
+      <head>
+        <meta charset="utf-8" />
+        <title>Timeflow Report</title>
+        <style>
   :root { color-scheme: light; }
   body {
     font-family: "Segoe UI", "Inter", Tahoma, sans-serif;
@@ -993,6 +720,7 @@ export default function ReportsPage() {
     min-height: 100vh;
     background: #ffffff;
   }
+  .page + .page { page-break-before: always; }
   .header-band {
     background: #1f2937;
     color: #ffffff;
@@ -1076,68 +804,21 @@ export default function ReportsPage() {
   }
   .footer { margin-top: 18px; color: #64748b; font-size: 11px; }
   @media print { body { background: #fff; } }
-</style>
-        </head>
-        <body>
-          <div class="page">
-            <div class="watermark"></div>
-            <div class="header-band">
-              <div class="header-row">
-                <div class="logo">${companyLabel}</div>
-                <div>
-                  <div class="header-title">Отчёт по дням</div>
-                  <div class="header-sub">${companyLabel}</div>
-                  <div class="header-sub">${monthLabelFromKey(monthKey)}</div>
-                  <div class="header-sub">Проект: ${projectLabel}</div>
-                </div>
-                <div class="doc-block">
-                  <div class="doc-label">Номер документа</div>
-                  <div class="doc-line"><span class="doc-num">${docNumber}-D</span></div>
-                </div>
-              </div>
-            </div>
-            <div class="content">
-              <div class="kpi-row">
-                <div class="kpi">
-                  <div class="kpi-label">Дней</div>
-                  <div class="kpi-value">${dayRows ? dayRows.match(/<tr>/g)?.length ?? 0 : 0}</div>
-                </div>
-                <div class="kpi">
-                  <div class="kpi-label">Часов всего</div>
-                  <div class="kpi-value">${totalHours}</div>
-                </div>
-              </div>
-              <div class="table-title">Дни</div>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th style="width: 36px;">#</th>
-                      <th>Дата</th>
-                      <th style="width: 120px; text-align: right;">Часы</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${dayRows || `<tr><td class="num"></td><td colspan="2">Нет данных</td></tr>`}
-                  </tbody>
-                </table>
-              </div>
-              <div class="footer">Сформировано автоматически в Timeflow • ${new Date().toLocaleString("ru-RU")}</div>
-            </div>
-            <script>window.print();</script>
-          </div>
-        </body>
-        </html>
-      `;
-if (w2) {
-        w2.document.write(dayHtml);
-        w2.document.close();
-      }
-    }
+        </style>
+      </head>
+      <body>
+        ${pageHtml}
+        ${dayHtml}
+        <script>window.print();</script>
+      </body>
+      </html>
+    `;
 
+    const w = window.open("", "_blank", "width=1200,height=900");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
   }
-
-
 
   function downloadCsv() {
 
@@ -1147,7 +828,7 @@ if (w2) {
 
     const rows = people.map((u) => [u.name.replace(/,/g, " "), formatHours(u.minutes)].join(","));
 
-    const csv = [header, ...rows].join("\\n");
+    const csv = [header, ...rows].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
 
