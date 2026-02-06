@@ -140,12 +140,12 @@ function ProjectSelect({ value, projects, onChange }: ProjectSelectProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const selected = projects.find((p) => p.id === value);
+  const selected = projects.find((p: any) => p.id === value);
   const label = value ? (selected?.name ?? value) : "Все проекты";
 
   return (
     <div className="relative" ref={wrapperRef}>
-      <button type="button" className="input input-select max-w-[320px] text-left" onClick={() => setOpen((v) => !v)}>
+      <button type="button" className="input input-select max-w-[320px] text-left" onClick={() => setOpen((v: any) => !v)}>
         {label}
       </button>
       {open && (
@@ -261,7 +261,7 @@ export default function OverviewPage() {
   const typingTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (user) => {
+    return onAuthStateChanged(auth, (user: any) => {
       setUserId(user?.uid ?? null);
       setAuthReady(true);
     });
@@ -298,7 +298,7 @@ export default function OverviewPage() {
 
     const q = query(collection(db, "projects"), where("ownerId", "==", userId), where("archived", "==", false));
 
-    return safeOnSnapshot(q, (snap) => {
+    return safeOnSnapshot(q, (snap: any) => {
       const list = snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as any) }));
       setProjects(list);
       setActiveProjects(list.length);
@@ -327,7 +327,7 @@ export default function OverviewPage() {
   useEffect(() => {
     if (selectedProjectId) {
       const q = query(collectionGroup(db, "months"), where("month", "==", monthKey), where("projectId", "==", selectedProjectId));
-      return safeOnSnapshot(q, (snap) => {
+      return safeOnSnapshot(q, (snap: any) => {
         let total = 0;
         snap.forEach((d: any) => {
           const data = d.data() as any;
@@ -344,9 +344,9 @@ export default function OverviewPage() {
     }
 
     const buckets = new Map<string, number>();
-    const unsubs = projects.map((project) => {
+    const unsubs = projects.map((project: any) => {
       const q = query(collectionGroup(db, "months"), where("month", "==", monthKey), where("projectId", "==", project.id));
-      return safeOnSnapshot(q, (snap) => {
+      return safeOnSnapshot(q, (snap: any) => {
         let subtotal = 0;
         snap.forEach((d: any) => {
           const data = d.data() as any;
@@ -360,14 +360,14 @@ export default function OverviewPage() {
     });
 
     return () => {
-      unsubs.forEach((u) => u());
+      unsubs.forEach((u: any) => u());
     };
   }, [monthKey, selectedProjectId, projects]);
 
   useEffect(() => {
     if (selectedProjectId) {
       const q = query(collectionGroup(db, "months"), where("month", "==", prevMonthKey), where("projectId", "==", selectedProjectId));
-      return safeOnSnapshot(q, (snap) => {
+      return safeOnSnapshot(q, (snap: any) => {
         let total = 0;
         snap.forEach((d: any) => {
           const data = d.data() as any;
@@ -384,9 +384,9 @@ export default function OverviewPage() {
     }
 
     const buckets = new Map<string, number>();
-    const unsubs = projects.map((project) => {
+    const unsubs = projects.map((project: any) => {
       const q = query(collectionGroup(db, "months"), where("month", "==", prevMonthKey), where("projectId", "==", project.id));
-      return safeOnSnapshot(q, (snap) => {
+      return safeOnSnapshot(q, (snap: any) => {
         let subtotal = 0;
         snap.forEach((d: any) => {
           const data = d.data() as any;
@@ -400,7 +400,7 @@ export default function OverviewPage() {
     });
 
     return () => {
-      unsubs.forEach((u) => u());
+      unsubs.forEach((u: any) => u());
     };
   }, [prevMonthKey, selectedProjectId, projects]);
 
@@ -412,7 +412,7 @@ export default function OverviewPage() {
 
     if (selectedProjectId) {
       const q = query(collection(db, "project_members"), where("projectId", "==", selectedProjectId), where("role", "in", ["admin", "worker"]));
-      return safeOnSnapshot(q, (snap) => {
+      return safeOnSnapshot(q, (snap: any) => {
         const ids = new Set<string>();
         snap.forEach((d: any) => {
           const data = d.data() as any;
@@ -428,9 +428,9 @@ export default function OverviewPage() {
     }
 
     const buckets = new Map<string, Set<string>>();
-    const unsubs = projects.map((project) => {
+    const unsubs = projects.map((project: any) => {
       const q = query(collection(db, "project_members"), where("projectId", "==", project.id), where("role", "in", ["admin", "worker"]));
-      return safeOnSnapshot(q, (snap) => {
+      return safeOnSnapshot(q, (snap: any) => {
         const ids = new Set<string>();
         snap.forEach((d: any) => {
           const data = d.data() as any;
@@ -438,13 +438,13 @@ export default function OverviewPage() {
         });
         buckets.set(project.id, ids);
         const all = new Set<string>();
-        buckets.forEach((set) => set.forEach((id) => all.add(id)));
+        buckets.forEach((set: any) => set.forEach((id: any) => all.add(id)));
         setPeopleCount(all.size);
       });
     });
 
     return () => {
-      unsubs.forEach((u) => u());
+      unsubs.forEach((u: any) => u());
     };
   }, [userId, selectedProjectId, projects]);
 
@@ -456,7 +456,7 @@ export default function OverviewPage() {
 
     const q = query(collection(db, "project_members"), where("projectId", "==", chatProjectId), where("role", "==", "admin"));
 
-    return safeOnSnapshot(q, (snap) => {
+    return safeOnSnapshot(q, (snap: any) => {
       const ids: string[] = [];
       snap.forEach((d: any) => {
         const data = d.data() as any;
@@ -529,7 +529,7 @@ export default function OverviewPage() {
       ws = new WebSocket(url.toString());
       wsRef.current = ws;
 
-      ws.onmessage = (event) => {
+      ws.onmessage = (event: any) => {
         let payload: any = null;
         try {
           payload = JSON.parse(event.data);
@@ -540,14 +540,14 @@ export default function OverviewPage() {
 
         if (payload.type === "message") {
           const message = payload.message as ChatMessage & { clientId?: string | null };
-          setChatMessages((prev) => {
-            const cleaned = prev.filter((m) => {
+          setChatMessages((prev: any) => {
+            const cleaned = prev.filter((m: any) => {
               if (!message?.clientId) return true;
               return m.id !== message.clientId;
             });
             const merged = [...cleaned, message];
             const seen = new Set<string>();
-            return merged.filter((m) => {
+            return merged.filter((m: any) => {
               const key = (m.id ?? m.tempId) as string | undefined;
               if (!key) return true;
               if (seen.has(key)) return false;
@@ -565,9 +565,9 @@ export default function OverviewPage() {
 
         if (payload.type === "reaction") {
           if (payload.userId === userId) return;
-          setChatReactions((prev) => {
+          setChatReactions((prev: any) => {
             const current = prev[payload.messageId] ? [...prev[payload.messageId]] : [];
-            const idx = current.findIndex((r) => r.emoji === payload.emoji);
+            const idx = current.findIndex((r: any) => r.emoji === payload.emoji);
             if (payload.action === "removed") {
               if (idx >= 0) {
                 const item = current[idx];
@@ -591,9 +591,9 @@ export default function OverviewPage() {
         }
 
         if (payload.type === "pin") {
-          setPinnedIds((prev) => {
+          setPinnedIds((prev: any) => {
             if (payload.action === "unpinned") {
-              return prev.filter((id) => id !== payload.messageId);
+              return prev.filter((id: any) => id !== payload.messageId);
             }
             if (prev.includes(payload.messageId)) return prev;
             return [...prev, payload.messageId];
@@ -603,7 +603,7 @@ export default function OverviewPage() {
         if (payload.type === "read") {
           if (payload.userId === userId) return;
           if (typeof payload.count !== "number") return;
-          setReadCounts((prev) => ({
+          setReadCounts((prev: any) => ({
             ...prev,
             [payload.messageId]: payload.count,
           }));
@@ -611,7 +611,7 @@ export default function OverviewPage() {
 
         if (payload.type === "typing") {
           if (payload.userId === userId) return;
-          setTypingUsers((prev) => {
+          setTypingUsers((prev: any) => {
             const next = new Set(prev);
             if (payload.isTyping) {
               next.add(payload.userId);
@@ -625,7 +625,7 @@ export default function OverviewPage() {
               clearTimeout(typingTimeoutsRef.current[payload.userId]);
             }
             typingTimeoutsRef.current[payload.userId] = window.setTimeout(() => {
-              setTypingUsers((prev) => prev.filter((id) => id !== payload.userId));
+              setTypingUsers((prev: any) => prev.filter((id: any) => id !== payload.userId));
             }, 6000);
           }
         }
@@ -643,8 +643,8 @@ export default function OverviewPage() {
 
   useEffect(() => {
     const ids = new Set<string>();
-    chatLeaderIds.forEach((id) => ids.add(id));
-    chatMessages.forEach((msg) => {
+    chatLeaderIds.forEach((id: any) => ids.add(id));
+    chatMessages.forEach((msg: any) => {
       if (msg.senderId) ids.add(String(msg.senderId));
     });
 
@@ -655,10 +655,10 @@ export default function OverviewPage() {
     }
 
     const q = query(collection(db, "users_public"), where("__name__", "in", Array.from(ids).slice(0, 10)));
-    return safeOnSnapshot(q, (snap) => {
+    return safeOnSnapshot(q, (snap: any) => {
       const map: Record<string, string> = {};
       const avatars: Record<string, string> = {};
-      snap.forEach((docSnap) => {
+      snap.forEach((docSnap: any) => {
         const data = docSnap.data() as any;
         map[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
         const avatar = data?.photoURL ?? data?.avatarUrl ?? data?.avatar ?? null;
@@ -695,7 +695,7 @@ export default function OverviewPage() {
       setOverdue(items.slice(0, 5));
 
       const needed = new Set<string>();
-      items.forEach((it) => {
+      items.forEach((it: any) => {
         if (it.userId) needed.add(String(it.userId));
       });
 
@@ -706,9 +706,9 @@ export default function OverviewPage() {
 
       const unsubUsers = safeOnSnapshot(
         query(collection(db, "users_public"), where("__name__", "in", Array.from(needed).slice(0, 10))),
-        (snap) => {
+        (snap: any) => {
           const map: Record<string, string> = {};
-          snap.forEach((docSnap) => {
+          snap.forEach((docSnap: any) => {
             const data = docSnap.data() as any;
             map[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
           });
@@ -721,9 +721,9 @@ export default function OverviewPage() {
       };
     };
 
-    const unsubs = ownedIds.map((projectId) => {
+    const unsubs = ownedIds.map((projectId: any) => {
       const q = query(collection(db, "project_schedules"), where("projectId", "==", projectId), where("scheduleConfirmed", "==", false));
-      return safeOnSnapshot(q, (snap) => {
+      return safeOnSnapshot(q, (snap: any) => {
         const list: OverdueItem[] = [];
         snap.forEach((d: any) => {
           const data = d.data() as any;
@@ -739,20 +739,20 @@ export default function OverviewPage() {
     });
 
     return () => {
-      unsubs.forEach((u) => u());
+      unsubs.forEach((u: any) => u());
     };
   }, [userId, selectedProjectId, projects]);
 
   function toggleReaction(messageId: string, emoji: string) {
     if (!chatProjectId || !userId || !isChatLeader) return;
 
-    setChatReactions((prev) => {
+    setChatReactions((prev: any) => {
       const current = prev[messageId] ? [...prev[messageId]] : [];
-      const mineEmojis = current.filter((r) => r.mine).map((r) => r.emoji);
+      const mineEmojis = current.filter((r: any) => r.mine).map((r: any) => r.emoji);
       const mineHas = mineEmojis.includes(emoji);
 
       const next = current
-        .map((r) => {
+        .map((r: any) => {
           if (!r.mine) return r;
           if (mineHas && r.emoji === emoji) {
             return { ...r, count: Math.max(0, r.count - 1), mine: false };
@@ -765,10 +765,10 @@ export default function OverviewPage() {
           }
           return r;
         })
-        .filter((r) => r.count > 0);
+        .filter((r: any) => r.count > 0);
 
       if (!mineHas) {
-        const idx = next.findIndex((r) => r.emoji === emoji);
+        const idx = next.findIndex((r: any) => r.emoji === emoji);
         if (idx >= 0) {
           next[idx] = { ...next[idx], count: next[idx].count + 1, mine: true };
         } else {
@@ -777,7 +777,7 @@ export default function OverviewPage() {
       }
 
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        mineEmojis.forEach((oldEmoji) => {
+        mineEmojis.forEach((oldEmoji: any) => {
           if (oldEmoji !== emoji) {
             wsRef.current?.send(JSON.stringify({ type: "reaction", projectId: chatProjectId, messageId, emoji: oldEmoji }));
           }
@@ -794,7 +794,7 @@ export default function OverviewPage() {
 
   async function togglePin(messageId: string) {
     if (!chatProjectId || !userId || !isChatLeader) return;
-    setPinnedIds((prev) => (prev.includes(messageId) ? prev.filter((id) => id !== messageId) : [...prev, messageId]));
+    setPinnedIds((prev: any) => (prev.includes(messageId) ? prev.filter((id: any) => id !== messageId) : [...prev, messageId]));
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "pin", projectId: chatProjectId, messageId }));
     }
@@ -820,7 +820,7 @@ export default function OverviewPage() {
       wsRef.current.send(JSON.stringify(payload));
     }
 
-    setChatMessages((prev) => [
+    setChatMessages((prev: any) => [
       ...prev,
       {
         id: clientId,
@@ -837,9 +837,9 @@ export default function OverviewPage() {
     setChatText("");
   }
 
-  const filteredChatMessages = chatMessages.filter((msg) => msg.senderId && chatLeaderSet.has(String(msg.senderId)));
-  const pinnedMessages = filteredChatMessages.filter((msg) => pinnedIds.includes(msg.id));
-  const regularMessages = filteredChatMessages.filter((msg) => !pinnedIds.includes(msg.id));
+  const filteredChatMessages = chatMessages.filter((msg: any) => msg.senderId && chatLeaderSet.has(String(msg.senderId)));
+  const pinnedMessages = filteredChatMessages.filter((msg: any) => pinnedIds.includes(msg.id));
+  const regularMessages = filteredChatMessages.filter((msg: any) => !pinnedIds.includes(msg.id));
 
   const currentMinutes = monthMinutes ?? 0;
   const prevMinutes = prevMonthMinutes ?? 0;
@@ -861,7 +861,7 @@ export default function OverviewPage() {
     { label: "Людей на проектах", value: peopleDisplay, note: selectedProjectId ? "в проекте" : "ваши проекты" },
   ];
 
-  const chatSelectedProject = projects.find((p) => p.id === chatProjectId);
+  const chatSelectedProject = projects.find((p: any) => p.id === chatProjectId);
   return (
     <div className="grid gap-6">
       <div className="panel motion p-6 min-h-[320px] max-h-[560px] overflow-hidden">
@@ -973,8 +973,8 @@ export default function OverviewPage() {
                           <div className="mt-1 text-[11px] text-white/45">Прочитано {readCounts[msg.id]}</div>
                         )}
                         <div className="chat-reactions">
-                          {["👍", "🔥", "✅"].map((emoji) => {
-                            const item = reactions.find((r) => r.emoji === emoji);
+                          {["👍", "🔥", "✅"].map((emoji: any) => {
+                            const item = reactions.find((r: any) => r.emoji === emoji);
                             return (
                               <button key={emoji} type="button" onClick={() => toggleReaction(msg.id, emoji)} className={`chat-reaction ${item?.mine ? "is-active" : ""}`}>
                                 {emoji} {item ? item.count : 0}
@@ -997,7 +997,7 @@ export default function OverviewPage() {
               Обсуждайте важные изменения, чтобы команда видела общий контекст.
             </div>
             {typingUsers.length > 0 && (
-              <div className="chat-typing">Печатает: {typingUsers.map((id) => chatUserNames[id] ?? "Пользователь").join(", ")}</div>
+              <div className="chat-typing">Печатает: {typingUsers.map((id: any) => chatUserNames[id] ?? "Пользователь").join(", ")}</div>
             )}
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <label className="text-xs text-muted">Сообщение</label>
@@ -1006,14 +1006,14 @@ export default function OverviewPage() {
                 rows={4}
                 placeholder={isChatLeader ? "Напишите короткое обновление для команды" : "Доступ только для руководителей"}
                 value={chatText}
-                onChange={(e) => setChatText(e.target.value)}
+                onChange={(e: any) => setChatText(e.target.value)}
                 disabled={!chatProjectId || !isChatLeader}
               />
               <div className="chat-controls">
                 <select
                   className="input input-select"
                   value={chatPriority}
-                  onChange={(e) => setChatPriority(e.target.value as any)}
+                  onChange={(e: any) => setChatPriority(e.target.value as any)}
                   disabled={!chatProjectId || !isChatLeader}
                 >
                   <option value="normal">Обычное</option>
@@ -1023,7 +1023,7 @@ export default function OverviewPage() {
                 <button
                   type="button"
                   className="btn btn-outline"
-                  onClick={() => setShowAttachment((v) => !v)}
+                  onClick={() => setShowAttachment((v: any) => !v)}
                   disabled={!chatProjectId || !isChatLeader}
                 >
                   Вложение
@@ -1043,13 +1043,13 @@ export default function OverviewPage() {
                     className="input"
                     placeholder="Ссылка на файл"
                     value={chatAttachmentUrl}
-                    onChange={(e) => setChatAttachmentUrl(e.target.value)}
+                    onChange={(e: any) => setChatAttachmentUrl(e.target.value)}
                   />
                   <input
                     className="input"
                     placeholder="Название (необязательно)"
                     value={chatAttachmentName}
-                    onChange={(e) => setChatAttachmentName(e.target.value)}
+                    onChange={(e: any) => setChatAttachmentName(e.target.value)}
                   />
                 </div>
               )}
@@ -1074,7 +1074,7 @@ export default function OverviewPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {cards.map((item) => (
+        {cards.map((item: any) => (
           <div key={item.label} className="panel motion p-6">
             <div className="text-sm text-muted">{item.label}</div>
             <div className="mt-3 text-3xl font-semibold tracking-tight">{item.value}</div>
@@ -1123,8 +1123,8 @@ export default function OverviewPage() {
             <span className="badge chip">{overdue.length}</span>
           </div>
           <div className="mt-6 grid gap-3 text-sm">
-            {overdue.map((item) => {
-              const projectName = projects.find((p) => p.id === item.projectId)?.name ?? item.projectId ?? "-";
+            {overdue.map((item: any) => {
+              const projectName = projects.find((p: any) => p.id === item.projectId)?.name ?? item.projectId ?? "-";
               const start = item.start?.toDate ? item.start.toDate() : null;
               const hours = start ? Math.round((Date.now() - start.getTime()) / 3600000) : null;
               const remindedAlready = reminded[item.id];
@@ -1142,7 +1142,7 @@ export default function OverviewPage() {
                     <button
                       type="button"
                       className={`btn btn-outline ${remindedAlready ? "opacity-60" : ""}`}
-                      onClick={() => setReminded((prev) => ({ ...prev, [item.id]: true }))}
+                      onClick={() => setReminded((prev: any) => ({ ...prev, [item.id]: true }))}
                     >
                       {remindedAlready ? "Запланировано" : "Напомнить"}
                     </button>
