@@ -266,7 +266,7 @@ export default function OverviewPage() {
   useEffect(() => {
     const messages = chatMessagesRef.current;
     if (!messages.length) return;
-    const last = messages[messages.length - 1];
+    const last = chatMessagesRef.current[chatMessagesRef.current.length - 1];
     if (last && last.senderId !== userId && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "read", projectId: chatProjectId, messageId: last.id }));
     }
@@ -909,7 +909,7 @@ export default function OverviewPage() {
               const threshold = 24;
               isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
               if (isAtBottomRef.current) {
-                const last = messages[messages.length - 1];
+                const last = chatMessagesRef.current[chatMessagesRef.current.length - 1];
                 if (last && last.senderId !== userId && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                   wsRef.current.send(JSON.stringify({ type: "read", projectId: chatProjectId, messageId: last.id }));
                 }
