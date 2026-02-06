@@ -1,4 +1,4 @@
-﻿export function escapeHtml(value: string) {
+export function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (char) => {
     switch (char) {
       case "&":

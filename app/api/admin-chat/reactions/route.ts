@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "../../../../lib/firebaseAdmin";
 import { queryDb } from "../../../../lib/db";
 
@@ -19,7 +19,7 @@ async function requireProjectAdmin(request: NextRequest, projectId: string) {
       return { ok: false, status: 403, message: "Project admin only" } as const;
     }
     return { ok: true, uid: decoded.uid } as const;
-  } catch (e) {
+  } catch {
     return { ok: false, status: 401, message: "Invalid token" } as const;
   }
 }
@@ -32,10 +32,11 @@ export async function POST(request: NextRequest) {
   const action = body?.action ?? "toggle";
 
   if (!projectId || !messageId || !emoji) {
-  if (!['👍','🔥','✅'].includes(emoji)) {
-    return NextResponse.json({ error: 'Invalid emoji' }, { status: 400 });
-  }
     return NextResponse.json({ error: "projectId, messageId, emoji are required" }, { status: 400 });
+  }
+
+  if (!["👍", "🔥", "✅"].includes(emoji)) {
+    return NextResponse.json({ error: "Invalid emoji" }, { status: 400 });
   }
 
   const guard = await requireProjectAdmin(request, projectId);

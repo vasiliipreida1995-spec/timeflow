@@ -8,7 +8,8 @@ import { onAuthStateChanged } from "firebase/auth";
 
 import { collection, collectionGroup, getDocs, query, where } from "firebase/firestore";
 
-import { auth, db } from "../../../lib/firebase";`r`nimport { escapeHtml } from "../../../lib/escapeHtml";
+import { auth, db } from "../../../lib/firebase";
+import { escapeHtml } from "../../../lib/escapeHtml";
 
 import { safeOnSnapshot } from "../../../lib/firestoreSafe";
 
