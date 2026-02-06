@@ -784,7 +784,7 @@ export default function ReportsPage() {
 
   td.value { width: 120px; text-align: right; font-weight: 600; }
 
-  .watermark {\n\n    position: absolute;\n\n    inset: 0;\n\n    pointer-events: none;\n\n    opacity: 0.22;\n\n    background-image:\n\n      repeating-linear-gradient(0deg, rgba(15, 23, 42, 0.35) 0 1px, transparent 1px 10px),\n\n      repeating-linear-gradient(90deg, rgba(15, 23, 42, 0.22) 0 1px, transparent 1px 18px);\n\n    mix-blend-mode: multiply;\n\n  }
+  .watermark {\n\n    position: absolute;\n\n    inset: 0;\n\n    pointer-events: none;\n\n    opacity: 0.35;\n\n    background-image:\n\n      repeating-linear-gradient(0deg, rgba(15, 23, 42, 0.45) 0 2px, transparent 2px 12px),\n\n      repeating-linear-gradient(90deg, rgba(15, 23, 42, 0.3) 0 2px, transparent 2px 20px);\n\n    mix-blend-mode: multiply;\n\n  }
 
   .footer { margin-top: 18px; color: #64748b; font-size: 11px; }
 
