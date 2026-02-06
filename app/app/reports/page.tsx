@@ -1143,8 +1143,7 @@ if (w2) {
 
     const rows = people.map((u) => [u.name.replace(/,/g, " "), formatHours(u.minutes)].join(","));
 
-    const csv = [header, ...rows].join("
-");
+    const csv = [header, ...rows].join("\\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
 
