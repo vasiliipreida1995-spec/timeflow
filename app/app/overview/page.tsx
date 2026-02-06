@@ -329,7 +329,7 @@ export default function OverviewPage() {
       const q = query(collectionGroup(db, "months"), where("month", "==", monthKey), where("projectId", "==", selectedProjectId));
       return safeOnSnapshot(q, (snap) => {
         let total = 0;
-        snap.forEach((d) => {
+        snap.forEach((d: any) => {
           const data = d.data() as any;
           const mins = Number(data?.totalMinutes ?? 0);
           if (!Number.isNaN(mins)) total += mins;
@@ -348,7 +348,7 @@ export default function OverviewPage() {
       const q = query(collectionGroup(db, "months"), where("month", "==", monthKey), where("projectId", "==", project.id));
       return safeOnSnapshot(q, (snap) => {
         let subtotal = 0;
-        snap.forEach((d) => {
+        snap.forEach((d: any) => {
           const data = d.data() as any;
           const mins = Number(data?.totalMinutes ?? 0);
           if (!Number.isNaN(mins)) subtotal += mins;
@@ -369,7 +369,7 @@ export default function OverviewPage() {
       const q = query(collectionGroup(db, "months"), where("month", "==", prevMonthKey), where("projectId", "==", selectedProjectId));
       return safeOnSnapshot(q, (snap) => {
         let total = 0;
-        snap.forEach((d) => {
+        snap.forEach((d: any) => {
           const data = d.data() as any;
           const mins = Number(data?.totalMinutes ?? 0);
           if (!Number.isNaN(mins)) total += mins;
@@ -388,7 +388,7 @@ export default function OverviewPage() {
       const q = query(collectionGroup(db, "months"), where("month", "==", prevMonthKey), where("projectId", "==", project.id));
       return safeOnSnapshot(q, (snap) => {
         let subtotal = 0;
-        snap.forEach((d) => {
+        snap.forEach((d: any) => {
           const data = d.data() as any;
           const mins = Number(data?.totalMinutes ?? 0);
           if (!Number.isNaN(mins)) subtotal += mins;
@@ -414,7 +414,7 @@ export default function OverviewPage() {
       const q = query(collection(db, "project_members"), where("projectId", "==", selectedProjectId), where("role", "in", ["admin", "worker"]));
       return safeOnSnapshot(q, (snap) => {
         const ids = new Set<string>();
-        snap.forEach((d) => {
+        snap.forEach((d: any) => {
           const data = d.data() as any;
           if (data?.userId) ids.add(String(data.userId));
         });
@@ -432,7 +432,7 @@ export default function OverviewPage() {
       const q = query(collection(db, "project_members"), where("projectId", "==", project.id), where("role", "in", ["admin", "worker"]));
       return safeOnSnapshot(q, (snap) => {
         const ids = new Set<string>();
-        snap.forEach((d) => {
+        snap.forEach((d: any) => {
           const data = d.data() as any;
           if (data?.userId) ids.add(String(data.userId));
         });
@@ -458,7 +458,7 @@ export default function OverviewPage() {
 
     return safeOnSnapshot(q, (snap) => {
       const ids: string[] = [];
-      snap.forEach((d) => {
+      snap.forEach((d: any) => {
         const data = d.data() as any;
         if (data?.userId) ids.push(String(data.userId));
       });
@@ -725,7 +725,7 @@ export default function OverviewPage() {
       const q = query(collection(db, "project_schedules"), where("projectId", "==", projectId), where("scheduleConfirmed", "==", false));
       return safeOnSnapshot(q, (snap) => {
         const list: OverdueItem[] = [];
-        snap.forEach((d) => {
+        snap.forEach((d: any) => {
           const data = d.data() as any;
           const start = data?.start?.toDate ? data.start.toDate() : null;
           if (!start) return;
