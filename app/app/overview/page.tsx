@@ -611,14 +611,14 @@ export default function OverviewPage() {
 
         if (payload.type === "typing") {
           if (payload.userId === userId) return;
-          setTypingUsers((prev: any) => {
+          setTypingUsers((prev: string[]) => {
             const next = new Set(prev);
             if (payload.isTyping) {
               next.add(payload.userId);
             } else {
               next.delete(payload.userId);
             }
-            return Array.from(next);
+            return Array.from(next) as string[];
           });
           if (payload.isTyping) {
             if (typingTimeoutsRef.current[payload.userId]) {
