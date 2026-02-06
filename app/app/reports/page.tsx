@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 
@@ -8,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 
 import { collection, collectionGroup, getDocs, query, where } from "firebase/firestore";
+import type { DocumentData, QueryDocumentSnapshot, QuerySnapshot } from "firebase/firestore";
 
 import { auth, db } from "../../../lib/firebase";
 import { escapeHtml } from "../../../lib/escapeHtml";
@@ -17,6 +17,18 @@ import { safeOnSnapshot } from "../../../lib/firestoreSafe";
 
 
 type Project = { id: string; name?: string | null };
+
+type ProjectDoc = { name?: string | null };
+
+type SettingsDoc = { settings?: { company_name?: string | null } };
+
+type UserPublicDoc = { name?: string | null; email?: string | null };
+
+type MonthDoc = {
+  totalMinutes?: number | null;
+  userId?: string | null;
+  days?: Record<string, number> | null;
+};
 
 
 
@@ -160,7 +172,7 @@ export default function ReportsPage() {
 
       const data = await res.json();
 
-      const name = data?.settings?.company_name;
+      const name = (data as SettingsDoc)?.settings?.company_name;
 
       if (name) setCompanyName(name);
 
@@ -190,7 +202,7 @@ export default function ReportsPage() {
 
     if (!authReady || !userId) {
 
-      setProjects([]);
+      setTimeout(() => setProjects([]), 0);
 
       return;
 
@@ -199,8 +211,8 @@ export default function ReportsPage() {
     const q = query(collection(db, "projects"), where("ownerId", "==", userId), where("archived", "==", false));
 
     return safeOnSnapshot(q, (snap) => {
-
-      const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      if (!("docs" in snap)) return;
+      const list = (snap as QuerySnapshot<DocumentData>).docs.map((d: QueryDocumentSnapshot<DocumentData>) => ({ id: d.id, ...(d.data() as ProjectDoc) }));
 
       setProjects(list);
 
@@ -214,12 +226,12 @@ export default function ReportsPage() {
 
     if (!projects.length) {
 
-      setProjectStats([]);
+      setTimeout(() => setProjectStats([]), 0);
 
-      setUserTotals([]);
+      setTimeout(() => setUserTotals([]), 0);
 
-      setProjectUserMinutes({});
-      setProjectDayMinutes({});
+      setTimeout(() => setProjectUserMinutes({}), 0);
+      setTimeout(() => setProjectDayMinutes({}), 0);
 
       return;
 
@@ -338,7 +350,8 @@ export default function ReportsPage() {
       );
 
       return safeOnSnapshot(q, (snap) => {
-
+        if (!("forEach" in snap)) return;
+        const querySnap = snap as QuerySnapshot<DocumentData>;
         let total = 0;
 
         const users = new Set<string>();
@@ -348,9 +361,9 @@ export default function ReportsPage() {
 
 
 
-        snap.forEach((docSnap) => {
+        snap.forEach((docSnap: QueryDocumentSnapshot<DocumentData>) => {
 
-          const data = docSnap.data() as any;
+          const data = docSnap.data() as MonthDoc;
 
           const mins = Number(data?.totalMinutes ?? 0);
 
@@ -417,9 +430,9 @@ export default function ReportsPage() {
 
         const snap = await getDocs(query(collection(db, "users_public"), where("__name__", "in", chunk)));
 
-        snap.forEach((docSnap) => {
+        snap.forEach((docSnap: QueryDocumentSnapshot<DocumentData>) => {
 
-          const data = docSnap.data() as any;
+          const data = docSnap.data() as UserPublicDoc;
 
           map.set(docSnap.id, data?.name ?? data?.email ?? "Нет имени");
 
@@ -1060,3 +1073,10 @@ export default function ReportsPage() {
   );
 
 }
+
+
+
+
+
+
+

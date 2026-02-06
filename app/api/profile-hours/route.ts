@@ -1,5 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "../../../lib/firebaseAdmin";
+
+type ProjectDoc = { ownerId?: string | null };
+
+type MemberDoc = { role?: string | null };
+
+type MonthDoc = { totalMinutes?: number | null };
 
 async function requireAuth(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
@@ -20,11 +26,11 @@ async function canAccessProfile(uid: string, targetId: string, projectId: string
   if (uid === targetId) return true;
   if (!projectId) return false;
   const projectSnap = await adminDb.collection("projects").doc(projectId).get();
-  const ownerId = projectSnap.exists ? (projectSnap.data() as any)?.ownerId : null;
+  const ownerId = projectSnap.exists ? (projectSnap.data() as ProjectDoc)?.ownerId ?? null : null;
   if (ownerId && ownerId === uid) return true;
   const memberId = `${projectId}_${uid}`;
   const memberSnap = await adminDb.collection("project_members").doc(memberId).get();
-  const role = memberSnap.exists ? (memberSnap.data() as any)?.role : null;
+  const role = memberSnap.exists ? (memberSnap.data() as MemberDoc)?.role ?? null : null;
   return role === "admin";
 }
 
@@ -66,7 +72,7 @@ export async function GET(request: NextRequest) {
   const snap = await queryRef.get();
   let totalMinutes = 0;
   snap.forEach((docSnap) => {
-    const data = docSnap.data() as any;
+    const data = docSnap.data() as MonthDoc;
     totalMinutes += Number(data?.totalMinutes ?? 0);
   });
 
@@ -78,7 +84,7 @@ export async function GET(request: NextRequest) {
       .doc(monthKey)
       .get();
     if (monthDoc.exists) {
-      totalMinutes = Number((monthDoc.data() as any)?.totalMinutes ?? 0);
+      totalMinutes = Number((monthDoc.data() as MonthDoc)?.totalMinutes ?? 0);
     } else if (monthKey.length >= 4) {
       const yearDoc = await adminDb
         .collection("accounting_hours")
@@ -87,7 +93,7 @@ export async function GET(request: NextRequest) {
         .doc(monthKey.slice(0, 4))
         .get();
       if (yearDoc.exists) {
-        totalMinutes = Number((yearDoc.data() as any)?.totalMinutes ?? 0);
+        totalMinutes = Number((yearDoc.data() as MonthDoc)?.totalMinutes ?? 0);
       }
     }
   }

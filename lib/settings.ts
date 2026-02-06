@@ -1,5 +1,10 @@
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+﻿import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "./firebase";
+
+export type BreakEntry = {
+  subtract?: boolean;
+  durationMinutes?: number;
+};
 
 export type AppSettings = {
   hourlyRate: number;
@@ -9,7 +14,7 @@ export type AppSettings = {
   pinHash?: string | null;
   biometricsEnabled: boolean;
   breakEnabled: boolean;
-  breaks: any[];
+  breaks: BreakEntry[];
   dayTargetHours: number;
   monthTargetHours: number;
   themeMode: "dark" | "light";
@@ -33,6 +38,8 @@ export const defaultSettings: AppSettings = {
   activeShiftStart: null,
 };
 
+type SettingsDoc = Partial<AppSettings>;
+
 export async function getOrCreateSettings(uid: string): Promise<AppSettings> {
   const ref = doc(db, "users_private", uid);
   const snap = await getDoc(ref);
@@ -40,18 +47,18 @@ export async function getOrCreateSettings(uid: string): Promise<AppSettings> {
     await setDoc(ref, defaultSettings, { merge: true });
     return { ...defaultSettings };
   }
-  const data = snap.data() as any;
+  const data = snap.data() as SettingsDoc;
   return { ...defaultSettings, ...data } as AppSettings;
 }
 
 export async function updateSettings(uid: string, patch: Partial<AppSettings>) {
   const ref = doc(db, "users_private", uid);
-  await updateDoc(ref, patch as any);
+  await updateDoc(ref, patch);
 }
 
 export function totalBreakMinutes(settings: AppSettings) {
   if (!settings.breakEnabled) return 0;
   return settings.breaks
-    .filter((b: any) => b?.subtract)
-    .reduce((sum: number, b: any) => sum + (b?.durationMinutes ?? 0), 0);
+    .filter((b) => b?.subtract)
+    .reduce((sum, b) => sum + (b?.durationMinutes ?? 0), 0);
 }

@@ -2,6 +2,8 @@
 import { adminAuth, adminDb } from "../../../../lib/firebaseAdmin";
 import { queryDb } from "../../../../lib/db";
 
+type ReactionRow = { id: number | string };
+
 async function requireProjectAdmin(request: NextRequest, projectId: string) {
   const authHeader = request.headers.get("authorization") ?? "";
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const existing = await queryDb<any[]>(
+  const existing = await queryDb<ReactionRow[]>(
     "SELECT id FROM project_admin_chat_reactions WHERE project_id = ? AND message_id = ? AND sender_id = ? AND emoji = ? LIMIT 1",
     [projectId, messageId, guard.uid, emoji]
   );

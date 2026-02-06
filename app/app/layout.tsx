@@ -3,14 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, collectionGroup, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AuthGate from "../../components/AuthGate";
 import { auth, db } from "../../lib/firebase";
 import { subscribeWebUser } from "../../lib/webUser";
 import { logoutUser } from "../../lib/userAccess";
 
-const NAV_ITEMS = [
+
+type UserPublicDoc = {
+  name?: string | null;
+  email?: string | null;
+  photoURL?: string | null;
+  avatarUrl?: string | null;
+  avatar?: string | null;
+};
+
+type ProjectDoc = { name?: string | null; ownerId?: string | null };
+
+type ProjectMemberDoc = { role?: string | null; projectId?: string | null };
+
+type ProfileResponse = { profile?: { phone?: string | null; address?: string | null } | null };
+
+type ProfileHoursResponse = { totalMinutes?: number | null };const NAV_ITEMS = [
   { href: "/app/overview", label: "Control Room", desc: "Пульс по часам и проектам" },
   { href: "/app/projects", label: "Projects", desc: "Портфель работ и загрузок" },
   { href: "/app/team", label: "Team", desc: "Роли, смены, доступы" },
@@ -82,7 +97,7 @@ const NAV_ITEMS = [
         const snap = await getDocs(query(collection(db, "users_public"), limit(200)));
         if (!active) return;
         const list = snap.docs.map((docSnap) => {
-          const data = docSnap.data() as any;
+          const data = docSnap.data() as UserPublicDoc;
           return {
             id: docSnap.id,
             name: data?.name ?? data?.email ?? "Нет имени",
@@ -159,7 +174,7 @@ const NAV_ITEMS = [
     try {
       if (projectIdFromPath) {
         const projectSnap = await getDoc(doc(db, "projects", projectIdFromPath));
-        const projectData = projectSnap.data() as any;
+        const projectData = projectSnap.data() as ProjectDoc;
         setProfileProjectName(projectData?.name ?? projectIdFromPath);
         resolvedProjectId = projectIdFromPath;
         setProfileProjectId(projectIdFromPath);
@@ -173,7 +188,7 @@ const NAV_ITEMS = [
           setProfileRole("не в проекте");
           return resolvedProjectId;
         }
-        const role = (memberSnap.data() as any)?.role ?? "";
+        const role = (memberSnap.data() as ProjectMemberDoc)?.role ?? "";
         setProfileRole(role === "admin" ? "менеджер" : role === "worker" ? "участник" : role || "участник");
         return resolvedProjectId;
       }
@@ -185,12 +200,12 @@ const NAV_ITEMS = [
         setProfileProjectId("");
         return "";
       }
-      const member = memberSnap.docs[0].data() as any;
+      const member = memberSnap.docs[0].data() as ProjectMemberDoc;
       const projectId = member?.projectId ?? "";
       resolvedProjectId = projectId;
       if (projectId) {
         const projectSnap = await getDoc(doc(db, "projects", projectId));
-        const projectData = projectSnap.data() as any;
+        const projectData = projectSnap.data() as ProjectDoc;
         setProfileProjectName(projectData?.name ?? projectId);
       } else {
         setProfileProjectName("");

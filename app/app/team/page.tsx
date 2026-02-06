@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
@@ -14,6 +14,19 @@ import { auth, db } from "../../../lib/firebase";
 type Project = {
   id: string;
   name: string;
+};
+
+
+type ProjectDoc = { name?: string | null };
+
+type MemberDoc = { userId?: string | null; projectId?: string | null };
+
+type UserPublicDoc = {
+  name?: string | null;
+  email?: string | null;
+  photoURL?: string | null;
+  avatarUrl?: string | null;
+  avatar?: string | null;
 };
 
 type TeamMember = {
@@ -61,7 +74,7 @@ export default function TeamPage() {
         if (!active) return;
 
         const projectList: Project[] = projectSnap.docs.map((docSnap) => {
-          const data = docSnap.data() as any;
+          const data = docSnap.data() as ProjectDoc;
           return { id: docSnap.id, name: data?.name ?? docSnap.id };
         });
         setProjects(projectList);
@@ -89,7 +102,7 @@ export default function TeamPage() {
           );
           if (!active) return;
           membersSnap.forEach((docSnap) => {
-            const data = docSnap.data() as any;
+            const data = docSnap.data() as MemberDoc;
             const memberId = String(data?.userId ?? "");
             const projectId = String(data?.projectId ?? "");
             if (!memberId || !projectId) return;
@@ -112,7 +125,7 @@ export default function TeamPage() {
           );
           if (!active) return;
           usersSnap.forEach((docSnap) => {
-            const data = docSnap.data() as any;
+            const data = docSnap.data() as UserPublicDoc;
             userInfo.set(docSnap.id, {
               name: data?.name ?? data?.email ?? "Нет имени",
               email: data?.email ?? "Нет данных",

@@ -2,6 +2,14 @@
 import { adminAuth, adminDb } from "../../../lib/firebaseAdmin";
 import { queryDb } from "../../../lib/db";
 
+type ProjectDoc = { ownerId?: string | null };
+
+type MemberDoc = { role?: string | null };
+
+type ProfileRow = { user_id: string; phone: string | null; address: string | null };
+
+type ProfilePayload = { projectId?: string; userId?: string; phone?: string | null; address?: string | null };
+
 async function requireAuth(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
@@ -20,11 +28,11 @@ async function requireAuth(request: NextRequest) {
 async function canAccessProfile(uid: string, targetId: string, projectId: string) {
   if (uid === targetId) return true;
   const projectSnap = await adminDb.collection("projects").doc(projectId).get();
-  const ownerId = projectSnap.exists ? (projectSnap.data() as any)?.ownerId : null;
+  const ownerId = projectSnap.exists ? (projectSnap.data() as ProjectDoc)?.ownerId ?? null : null;
   if (ownerId && ownerId === uid) return true;
   const memberId = `${projectId}_${uid}`;
   const memberSnap = await adminDb.collection("project_members").doc(memberId).get();
-  const role = memberSnap.exists ? (memberSnap.data() as any)?.role : null;
+  const role = memberSnap.exists ? (memberSnap.data() as MemberDoc)?.role ?? null : null;
   return role === "admin";
 }
 
@@ -47,7 +55,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 
-  const rows = await queryDb<any[]>(
+  const rows = await queryDb<ProfileRow[]>(
     "SELECT user_id, phone, address FROM user_profiles WHERE user_id = ?",
     [userId]
   );
@@ -62,7 +70,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: guard.message }, { status: guard.status });
   }
 
-  const body = await request.json().catch(() => null);
+  const body = (await request.json().catch(() => null)) as ProfilePayload | null;
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "Некорректные данные" }, { status: 400 });
   }

@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { admin, adminDb } from "../../../../lib/firebaseAdmin";
 import { requireAdmin } from "../adminGuard";
+
+type InviteDoc = { email?: string; role?: string };
+
+type InviteResponse = InviteDoc & { id: string };
 
 export async function GET(request: NextRequest) {
   const guard = await requireAdmin(request);
@@ -9,7 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   const snap = await adminDb.collection("web_invites").get();
-  const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const items: InviteResponse[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as InviteDoc) }));
   return NextResponse.json({ invites: items });
 }
 
@@ -19,9 +23,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: guard.message }, { status: guard.status });
   }
 
-  const body = await request.json().catch(() => ({} as any));
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  const role = body.role === "admin" ? "admin" : "manager";
+  const body = (await request.json().catch(() => null)) as Partial<InviteDoc> | null;
+  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const role = body?.role === "admin" ? "admin" : "manager";
 
   if (!email) {
     return NextResponse.json({ error: "Email required" }, { status: 400 });

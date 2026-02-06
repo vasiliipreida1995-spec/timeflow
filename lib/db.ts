@@ -1,4 +1,5 @@
-import mysql from "mysql2/promise";
+﻿import mysql from "mysql2/promise";
+import type { RowDataPacket } from "mysql2";
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -10,7 +11,9 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-export async function queryDb<T = any>(sql: string, params: any[] = []) {
+type DbParam = string | number | boolean | null;
+
+export async function queryDb<T = RowDataPacket[]>(sql: string, params: readonly DbParam[] = []) {
   const [rows] = await pool.execute(sql, params);
   return rows as T;
 }

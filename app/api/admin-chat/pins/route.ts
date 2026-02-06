@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "../../../../lib/firebaseAdmin";
 import { queryDb } from "../../../../lib/db";
+
+type PinRow = { message_id: number | string };
 
 async function requireProjectAdmin(request: NextRequest, projectId: string) {
   const authHeader = request.headers.get("authorization") ?? "";
@@ -19,7 +21,7 @@ async function requireProjectAdmin(request: NextRequest, projectId: string) {
       return { ok: false, status: 403, message: "Project admin only" } as const;
     }
     return { ok: true, uid: decoded.uid } as const;
-  } catch (e) {
+  } catch {
     return { ok: false, status: 401, message: "Invalid token" } as const;
   }
 }
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: guard.message }, { status: guard.status });
   }
 
-  const exists = await queryDb<any[]>(
+  const exists = await queryDb<PinRow[]>(
     "SELECT message_id FROM project_admin_chat_pins WHERE project_id = ? AND message_id = ? LIMIT 1",
     [projectId, messageId]
   );

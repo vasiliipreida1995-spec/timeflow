@@ -18,7 +18,7 @@ export default function ResetPage() {
     try {
       await sendPasswordResetEmail(auth, email.trim());
       setMessage("Письмо для сброса отправлено.");
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError("Не удалось отправить письмо.");
     } finally {
       setLoading(false);

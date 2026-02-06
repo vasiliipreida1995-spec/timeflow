@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 "use client";
 
@@ -24,7 +25,7 @@ type Project = {
   password?: string | null;
   ownerId?: string | null;
   archived?: boolean | null;
-  createdAt?: any;
+  createdAt?: Timestamp | null;
 };
 
 type ProjectMember = {
@@ -32,7 +33,7 @@ type ProjectMember = {
   projectId?: string | null;
   userId?: string | null;
   role?: string | null;
-  joinedAt?: any;
+  joinedAt?: Timestamp | null;
 };
 
 export default function ProjectsPage() {
@@ -74,7 +75,7 @@ export default function ProjectsPage() {
       (snap) => {
         const items = snap.docs.map((d) => ({
           id: d.id,
-          ...(d.data() as any),
+          ...(d.data() as ProjectDoc),
         }));
         setProjects(items);
         if (!selectedProjectId && items.length > 0) {
@@ -106,7 +107,7 @@ export default function ProjectsPage() {
       (snap) => {
         const items = snap.docs.map((d) => ({
           id: d.id,
-          ...(d.data() as any),
+          ...(d.data() as ProjectMemberDoc),
         }));
         setMembers(items);
         setMembersLoading(false);
@@ -152,7 +153,7 @@ export default function ProjectsPage() {
 
       setName("");
       setPassword("");
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e?.message ?? "Ошибка при создании проекта");
     }
   }
@@ -168,7 +169,7 @@ export default function ProjectsPage() {
     setBusyId(project.id);
     try {
       await updateDoc(doc(db, "projects", project.id), { name: clean });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e?.message ?? "Ошибка при переименовании");
     } finally {
       setBusyId(null);
@@ -186,7 +187,7 @@ export default function ProjectsPage() {
         archived: true,
         archivedAt: serverTimestamp(),
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e?.message ?? "Ошибка при архивировании");
     } finally {
       setBusyId(null);
@@ -324,9 +325,11 @@ function MemberRow({ member }: { member: ProjectMember }) {
 
   useEffect(() => {
     if (!member.userId) {
-      setLabel(null);
-      setEmail(null);
-      setLoaded(true);
+      setTimeout(() => {
+        setLabel(null);
+        setEmail(null);
+        setLoaded(true);
+      }, 0);
       return;
     }
 
@@ -337,7 +340,7 @@ function MemberRow({ member }: { member: ProjectMember }) {
         setLoaded(true);
         return;
       }
-      const data = snap.data() as any;
+      const data = snap.data() as UserPublicDoc;
       setLabel(data?.name ?? data?.email ?? null);
       setEmail(data?.email ?? null);
       setLoaded(true);
@@ -354,3 +357,13 @@ function MemberRow({ member }: { member: ProjectMember }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+

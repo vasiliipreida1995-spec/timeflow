@@ -1,6 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "../../../lib/firebaseAdmin";
 import { queryDb } from "../../../lib/db";
+
+type ChatRow = {
+  id: number | string;
+  sender_id: string | null;
+  text: string | null;
+  created_at: Date | string | null;
+  attachment_url?: string | null;
+  attachment_name?: string | null;
+  priority?: string | null;
+};
+
+type ReactionRow = {
+  message_id: number | string;
+  emoji: string;
+  count: number | string;
+  mine: number | string | null;
+};
+
+type PinRow = { message_id: number | string };
+
+type ReadRow = { message_id: number | string; count: number | string | null };
 
 async function requireProjectAdmin(request: NextRequest, projectId: string) {
   const authHeader = request.headers.get("authorization") ?? "";
@@ -19,7 +40,7 @@ async function requireProjectAdmin(request: NextRequest, projectId: string) {
       return { ok: false, status: 403, message: "Project admin only" } as const;
     }
     return { ok: true, uid: decoded.uid } as const;
-  } catch (e) {
+  } catch {
     return { ok: false, status: 401, message: "Invalid token" } as const;
   }
 }
@@ -36,7 +57,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: guard.message }, { status: guard.status });
   }
 
-  const rows = await queryDb<any[]>(
+  const rows = await queryDb<ChatRow[]>(
     "SELECT id, sender_id, text, created_at, attachment_url, attachment_name, priority FROM project_admin_chat WHERE project_id = ? ORDER BY created_at DESC LIMIT 50",
     [projectId]
   );
@@ -55,7 +76,7 @@ export async function GET(request: NextRequest) {
 
   if (ids.length > 0) {
     const placeholders = ids.map(() => "?").join(",");
-    const reactionRows = await queryDb<any[]>(
+    const reactionRows = await queryDb<ReactionRow[]>(
       `SELECT message_id, emoji, COUNT(*) as count, SUM(sender_id = ?) as mine
        FROM project_admin_chat_reactions
        WHERE project_id = ? AND message_id IN (${placeholders})
@@ -66,17 +87,21 @@ export async function GET(request: NextRequest) {
     reactions = reactionRows.reduce((acc, row) => {
       const id = String(row.message_id);
       if (!acc[id]) acc[id] = [];
-      acc[id].push({ emoji: row.emoji, count: Number(row.count), mine: Number(row.mine) > 0 });
+      acc[id].push({
+        emoji: row.emoji,
+        count: Number(row.count),
+        mine: Number(row.mine) > 0,
+      });
       return acc;
     }, {} as Record<string, { emoji: string; count: number; mine: boolean }[]>);
 
-    const pinRows = await queryDb<any[]>(
+    const pinRows = await queryDb<PinRow[]>(
       "SELECT message_id FROM project_admin_chat_pins WHERE project_id = ?",
       [projectId]
     );
     pinnedIds = pinRows.map((r) => String(r.message_id));
 
-    const readRows = await queryDb<any[]>(
+    const readRows = await queryDb<ReadRow[]>(
       `SELECT r.message_id, COUNT(DISTINCT r.user_id) as count
        FROM project_admin_chat_reads r
        JOIN project_admin_chat m ON m.id = r.message_id
@@ -114,7 +139,14 @@ export async function POST(request: NextRequest) {
 
   await queryDb(
     "INSERT INTO project_admin_chat (project_id, sender_id, text, attachment_url, attachment_name, priority, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())",
-    [projectId, guard.uid, clean, body?.attachmentUrl ?? null, body?.attachmentName ?? null, body?.priority ?? "normal"]
+    [
+      projectId,
+      guard.uid,
+      clean,
+      body?.attachmentUrl ?? null,
+      body?.attachmentName ?? null,
+      body?.priority ?? "normal",
+    ]
   );
 
   return NextResponse.json({ ok: true });

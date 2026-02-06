@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
@@ -14,6 +14,12 @@ type WebUserItem = {
   approved?: boolean | null;
 };
 
+type ErrorPayload = { error?: string };
+
+type InviteResponse = { invites?: Invite[] };
+
+type UsersResponse = { users?: WebUserItem[] };
+
 async function fetchAdmin(path: string, options: RequestInit = {}) {
   const user = auth.currentUser;
   const token = await user?.getIdToken();
@@ -25,10 +31,17 @@ async function fetchAdmin(path: string, options: RequestInit = {}) {
 
   const res = await fetch(path, { ...options, headers });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({} as any));
+    const data = (await res.json().catch(() => ({} as ErrorPayload))) as ErrorPayload;
     throw new Error(data.error || `Request failed (${res.status})`);
   }
   return res.json();
+}
+
+function getErrorMessage(err: unknown, fallback: string) {
+  if (typeof err === "object" && err && "message" in err) {
+    return String((err as { message?: unknown }).message ?? fallback);
+  }
+  return fallback;
 }
 
 export default function AdminPage() {
@@ -63,10 +76,10 @@ export default function AdminPage() {
           fetchAdmin("/api/admin/invites"),
           fetchAdmin("/api/admin/users"),
         ]);
-        setInvites(inviteData.invites ?? []);
-        setUsers(userData.users ?? []);
-      } catch (e: any) {
-        setError(e?.message ?? "Ошибка загрузки");
+        setInvites((inviteData as InviteResponse).invites ?? []);
+        setUsers((userData as UsersResponse).users ?? []);
+      } catch (e: unknown) {
+        setError(getErrorMessage(e, "Ошибка загрузки"));
       }
     };
     load();
@@ -82,10 +95,10 @@ export default function AdminPage() {
         body: JSON.stringify({ email: clean, role: "manager" }),
       });
       setEmail("");
-      const items = await fetchAdmin("/api/admin/invites");
+      const items = (await fetchAdmin("/api/admin/invites")) as InviteResponse;
       setInvites(items.invites ?? []);
-    } catch (e: any) {
-      setError(e?.message ?? "Ошибка при создании приглашения");
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Ошибка при создании приглашения"));
     }
   }
 
@@ -93,24 +106,22 @@ export default function AdminPage() {
     setError(null);
     try {
       await fetchAdmin(`/api/admin/invites/${id}`, { method: "DELETE" });
-      const items = await fetchAdmin("/api/admin/invites");
+      const items = (await fetchAdmin("/api/admin/invites")) as InviteResponse;
       setInvites(items.invites ?? []);
-    } catch (e: any) {
-      setError(e?.message ?? "Ошибка при удалении приглашения");
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Ошибка при удалении приглашения"));
     }
   }
 
   if (loading) {
-    return <div className="panel motion p-6">Загрузка...</div>
+    return <div className="panel motion p-6">Загрузка...</div>;
   }
 
   if (role !== "admin") {
     return (
       <div className="panel motion p-6">
         <h1 className="text-2xl font-semibold">Админ</h1>
-        <p className="mt-2 text-sm text-muted">
-          Доступ только для администраторов.
-        </p>
+        <p className="mt-2 text-sm text-muted">Доступ только для администраторов.</p>
       </div>
     );
   }
@@ -119,25 +130,15 @@ export default function AdminPage() {
     <div className="grid gap-6">
       <div className="panel motion p-6">
         <h1 className="text-2xl font-semibold">Админ</h1>
-        <p className="mt-2 text-sm text-muted">
-          Управление приглашениями и пользователями.
-        </p>
+        <p className="mt-2 text-sm text-muted">Управление приглашениями и пользователями.</p>
       </div>
 
-      {error && (
-        <div className="panel motion p-4 text-sm text-red-400">
-          {error}
-        </div>
-      )}
+      {error && <div className="panel motion p-4 text-sm text-red-400">{error}</div>}
 
       <div className="panel motion p-6">
         <h2 className="text-lg font-semibold">Пригласить менеджера</h2>
         <div className="mt-4 flex flex-wrap gap-3">
-          <input
-            className="input"
-            placeholder="Email менеджера"
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <input className="input" placeholder="Email менеджера" onChange={(e) => setEmail(e.target.value)} />
           <button className="btn btn-primary" onClick={addInvite}>
             Пригласить
           </button>
@@ -149,19 +150,14 @@ export default function AdminPage() {
           <h2 className="text-lg font-semibold">Ожидающие приглашения</h2>
           <div className="mt-4 grid gap-2 text-sm">
             {invites.map((i) => (
-              <div
-                key={i.id}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
-              >
+              <div key={i.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 <span>{i.email}</span>
                 <button className="btn btn-outline" onClick={() => removeInvite(i.id)}>
                   Удалить
                 </button>
               </div>
             ))}
-            {invites.length === 0 && (
-              <p className="text-sm text-muted">Пока нет приглашений.</p>
-            )}
+            {invites.length === 0 && <p className="text-sm text-muted">Пока нет приглашений.</p>}
           </div>
         </div>
 
@@ -169,10 +165,7 @@ export default function AdminPage() {
           <h2 className="text-lg font-semibold">Пользователи</h2>
           <div className="mt-4 grid gap-2 text-sm">
             {users.map((u) => (
-              <div
-                key={u.id}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
-              >
+              <div key={u.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 <div>
                   <p className="font-semibold">{u.email ?? "Нет email"}</p>
                   <p className="text-xs text-muted">{u.role ?? "Роль не выбрана"}</p>
@@ -180,9 +173,7 @@ export default function AdminPage() {
                 <span className="pill">{u.approved ? "active" : "pending"}</span>
               </div>
             ))}
-            {users.length === 0 && (
-              <p className="text-sm text-muted">Пользователей пока нет.</p>
-            )}
+            {users.length === 0 && <p className="text-sm text-muted">Пользователей пока нет.</p>}
           </div>
         </div>
       </div>

@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "../../../../lib/firebaseAdmin";
 import { queryDb } from "../../../../lib/db";
+
+type TypingRow = { user_id: string | number };
 
 async function requireProjectAdmin(request: NextRequest, projectId: string) {
   const authHeader = request.headers.get("authorization") ?? "";
@@ -19,7 +21,7 @@ async function requireProjectAdmin(request: NextRequest, projectId: string) {
       return { ok: false, status: 403, message: "Project admin only" } as const;
     }
     return { ok: true, uid: decoded.uid } as const;
-  } catch (e) {
+  } catch {
     return { ok: false, status: 401, message: "Invalid token" } as const;
   }
 }
@@ -36,7 +38,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: guard.message }, { status: guard.status });
   }
 
-  const rows = await queryDb<any[]>(
+  const rows = await queryDb<TypingRow[]>(
     "SELECT user_id FROM project_admin_chat_typing WHERE project_id = ? AND updated_at >= (NOW() - INTERVAL 10 SECOND)",
     [projectId]
   );

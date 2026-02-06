@@ -1,4 +1,4 @@
-import {
+﻿import {
   collection,
   deleteDoc,
   doc,
@@ -18,14 +18,16 @@ export type WebUser = {
   role?: WebRole | null;
   approved?: boolean;
   email?: string | null;
-  createdAt?: any;
+  createdAt?: unknown;
 };
 
 export type WebInvite = {
   email: string;
   role: WebRole;
-  createdAt?: any;
+  createdAt?: unknown;
 };
+
+export type WebUserDoc = WebUser & { id: string };
 
 export async function getOrCreateWebUser(uid: string, email?: string | null) {
   const ref = doc(db, "web_users", uid);
@@ -55,12 +57,12 @@ export function subscribeWebUser(uid: string, cb: (user: WebUser | null) => void
 }
 
 export async function updateWebUser(uid: string, patch: Partial<WebUser>) {
-  await updateDoc(doc(db, "web_users", uid), patch as any);
+  await updateDoc(doc(db, "web_users", uid), patch);
 }
 
-export async function listWebUsers() {
+export async function listWebUsers(): Promise<WebUserDoc[]> {
   const snap = await getDocs(collection(db, "web_users"));
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as WebUser) }));
 }
 
 export async function createInvite(email: string, role: WebRole) {
@@ -71,9 +73,9 @@ export async function createInvite(email: string, role: WebRole) {
   } satisfies WebInvite);
 }
 
-export async function listInvites() {
+export async function listInvites(): Promise<(WebInvite & { id: string })[]> {
   const snap = await getDocs(collection(db, "web_invites"));
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as WebInvite) }));
 }
 
 export async function deleteInvite(id: string) {

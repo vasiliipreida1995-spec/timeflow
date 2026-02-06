@@ -2,6 +2,36 @@
 import { adminAuth } from "../../../lib/firebaseAdmin";
 import { queryDb } from "../../../lib/db";
 
+type SettingsRow = {
+  company_name?: string | null;
+  timezone?: string | null;
+  currency?: string | null;
+  language?: string | null;
+  max_shift_hours?: number | null;
+  min_break_minutes?: number | null;
+  confirm_hours?: number | null;
+  overtime_policy?: string | null;
+  email_sender?: string | null;
+  copy_lead?: string | null;
+  slack_channel?: string | null;
+  telegram_channel?: string | null;
+};
+
+type SettingsValues = {
+  company_name: string | null;
+  timezone: string | null;
+  currency: string | null;
+  language: string | null;
+  max_shift_hours: number | null;
+  min_break_minutes: number | null;
+  confirm_hours: number | null;
+  overtime_policy: string | null;
+  email_sender: string | null;
+  copy_lead: string | null;
+  slack_channel: string | null;
+  telegram_channel: string | null;
+};
+
 async function requireAuth(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
@@ -23,7 +53,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: guard.message }, { status: guard.status });
   }
 
-  const rows = await queryDb<any[]>(
+  const rows = await queryDb<SettingsRow[]>(
     "SELECT company_name, timezone, currency, language, max_shift_hours, min_break_minutes, confirm_hours, overtime_policy, email_sender, copy_lead, slack_channel, telegram_channel FROM app_settings WHERE user_id = ?",
     [guard.uid]
   );
@@ -38,12 +68,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: guard.message }, { status: guard.status });
   }
 
-  const body = await request.json().catch(() => null);
+  const body = (await request.json().catch(() => null)) as Partial<SettingsRow> | null;
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const values = {
+  const values: SettingsValues = {
     company_name: body.company_name ?? null,
     timezone: body.timezone ?? null,
     currency: body.currency ?? null,

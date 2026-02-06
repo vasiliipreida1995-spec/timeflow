@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
@@ -17,13 +17,15 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       setAuthUser(user);
+      if (!user) {
+        setWebUser(undefined);
+      }
     });
     return () => unsubAuth();
   }, []);
 
   useEffect(() => {
     if (!authUser) {
-      setWebUser(undefined);
       return;
     }
 
@@ -101,3 +103,5 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+
+

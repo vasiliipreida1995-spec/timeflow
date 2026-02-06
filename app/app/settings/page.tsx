@@ -5,6 +5,22 @@ import { useSearchParams } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../../lib/firebase";
 
+
+type SettingsPayload = {
+  company_name?: string | null;
+  timezone?: string | null;
+  currency?: string | null;
+  language?: string | null;
+  max_shift_hours?: number | null;
+  min_break_minutes?: number | null;
+  confirm_hours?: number | null;
+  overtime_policy?: string | null;
+  email_sender?: string | null;
+  copy_lead?: string | null;
+  slack_channel?: string | null;
+  telegram_channel?: string | null;
+};
+
 const SECTIONS = [
   { id: "org", label: "Организация" },
   { id: "limits", label: "Лимиты" },
@@ -27,7 +43,7 @@ async function fetchSettings() {
   return res.json();
 }
 
-async function saveSettings(payload: Record<string, any>) {
+async function saveSettings(payload: SettingsPayload) {
   const token = await auth.currentUser?.getIdToken();
   const res = await fetch("/api/settings", {
     method: "POST",
@@ -94,8 +110,9 @@ export default function SettingsPage() {
           if (s.slack_channel) setSlackChannel(s.slack_channel);
           if (s.telegram_channel) setTelegramChannel(s.telegram_channel);
         })
-        .catch((e) => {
-          setError(e?.message ?? "Ошибка загрузки настроек");
+        .catch((e: unknown) => {
+          const msg = typeof e === "object" && e && "message" in e ? String((e as { message?: unknown }).message ?? "") : "";
+          setError(msg || "Ошибка загрузки настроек");
         })
         .finally(() => setLoading(false));
     });
@@ -126,8 +143,9 @@ export default function SettingsPage() {
         telegram_channel: telegramChannel,
       });
       setSuccess(true);
-    } catch (e: any) {
-      setError(e?.message ?? "Ошибка сохранения");
+    } catch (e: unknown) {
+      const msg = typeof e === "object" && e && "message" in e ? String((e as { message?: unknown }).message ?? "") : "";
+      setError(msg || "Ошибка сохранения");
     } finally {
       setSaving(false);
       setTimeout(() => setSuccess(false), 2000);

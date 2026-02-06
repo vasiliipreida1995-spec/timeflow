@@ -1,4 +1,4 @@
-import {
+﻿import {
   addDoc,
   collection,
   doc,
@@ -19,13 +19,15 @@ export type Shift = {
   breakMinutes: number;
   projectId?: string | null;
   workedMinutes?: number;
-  createdAt?: any;
+  createdAt?: unknown;
 };
+
+type ShiftDoc = Omit<Shift, "id">;
 
 export async function loadShifts(uid: string): Promise<Shift[]> {
   const ref = collection(db, "work_shifts", uid, "shifts");
   const snap = await getDocs(query(ref, orderBy("createdAt", "desc")));
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as ShiftDoc) }));
 }
 
 export async function addShift(uid: string, shift: Omit<Shift, "id">) {
@@ -41,7 +43,7 @@ export async function addShift(uid: string, shift: Omit<Shift, "id">) {
 
 export async function updateShift(uid: string, id: string, patch: Partial<Shift>) {
   const ref = doc(db, "work_shifts", uid, "shifts", id);
-  await updateDoc(ref, patch as any);
+  await updateDoc(ref, patch);
 }
 
 export async function removeShift(uid: string, id: string) {

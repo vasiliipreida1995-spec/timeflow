@@ -1,4 +1,4 @@
-import {
+﻿import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
@@ -6,6 +6,13 @@ import {
 } from "firebase/auth";
 import { auth } from "./firebase";
 import { getOrCreateWebUser } from "./webUser";
+
+function getErrorCode(err: unknown): string | undefined {
+  if (typeof err === "object" && err && "code" in err) {
+    return String((err as { code?: unknown }).code ?? "");
+  }
+  return undefined;
+}
 
 export async function registerUser({
   name,
@@ -21,8 +28,8 @@ export async function registerUser({
     await updateProfile(cred.user, { displayName: name });
     await getOrCreateWebUser(cred.user.uid, email);
     return null;
-  } catch (e: any) {
-    const code = e?.code as string | undefined;
+  } catch (e: unknown) {
+    const code = getErrorCode(e);
     switch (code) {
       case "auth/email-already-in-use":
         return "Email уже используется.";
@@ -42,8 +49,8 @@ export async function loginUser(email: string, password: string) {
   try {
     await signInWithEmailAndPassword(auth, email, password);
     return null;
-  } catch (e: any) {
-    const code = e?.code as string | undefined;
+  } catch (e: unknown) {
+    const code = getErrorCode(e);
     return code ? `Ошибка входа (${code})` : "Ошибка входа.";
   }
 }
