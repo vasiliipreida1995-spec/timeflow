@@ -149,12 +149,14 @@ export default function ReportsPage() {
   const [projectUserDayMinutes, setProjectUserDayMinutes] = useState<
     Record<string, Record<string, Record<string, number>>>
   >({});
+  const [userDayMinutesTotals, setUserDayMinutesTotals] = useState<Record<string, Record<string, number>>>({});
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
 
   const [selectedUserId, setSelectedUserId] = useState<string>("");
 
   const [companyName, setCompanyName] = useState("Timeflow Ops");
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
 
 
 
@@ -237,6 +239,7 @@ export default function ReportsPage() {
       setTimeout(() => setProjectUserMinutes({}), 0);
       setTimeout(() => setProjectDayMinutes({}), 0);
       setTimeout(() => setProjectUserDayMinutes({}), 0);
+      setTimeout(() => setUserDayMinutesTotals({}), 0);
 
       return;
 
@@ -274,6 +277,7 @@ export default function ReportsPage() {
 
       const perProjectUsers: Record<string, Record<string, number>> = {};
       const perProjectUserDays: Record<string, Record<string, Record<string, number>>> = {};
+      const perUserDayTotals: Record<string, Record<string, number>> = {};
 
 
 
@@ -314,6 +318,17 @@ export default function ReportsPage() {
         });
         perProjectUserDays[entry.project.id] = userDays;
 
+        entry.userDayMinutes.forEach((days, uid) => {
+          let userDayMap = perUserDayTotals[uid];
+          if (!userDayMap) {
+            userDayMap = {};
+            perUserDayTotals[uid] = userDayMap;
+          }
+          days.forEach((mins, day) => {
+            userDayMap[day] = (userDayMap[day] ?? 0) + mins;
+          });
+        });
+
       });
 
 
@@ -349,6 +364,7 @@ export default function ReportsPage() {
       });
       setProjectDayMinutes(perProjectDays);
       setProjectUserDayMinutes(perProjectUserDays);
+      setUserDayMinutesTotals(perUserDayTotals);
 
     };
 
@@ -565,6 +581,8 @@ export default function ReportsPage() {
 
   const filteredAvgPerProject = filteredProjectCount ? filteredTotalMinutes / filteredProjectCount : 0;
   function downloadPdf() {
+    if (isPdfLoading) return;
+    setIsPdfLoading(true);
     return (async () => {
       const totalHours = formatHours(filteredTotalMinutes);
       const peopleCount = filteredPeopleCount;
@@ -603,10 +621,10 @@ export default function ReportsPage() {
         )
         .join("");
 
-      const projectLabel = selectedProject?.name ?? (selectedProjectId ? selectedProjectId : companyName || "Timeflow Ops");
-      const personLabel = selectedUser?.name ?? (selectedUserId ? selectedUserId : "");
-      const documentNumber = `TF-${monthKey.replace("-", "")}-${(selectedProjectId || "ALL").slice(0, 6).toUpperCase()}-${new Date().getDate().toString().padStart(2, "0")}`;
       const companyLabel = companyName || "Timeflow Ops";
+      const personLabel = selectedUser?.name ?? (selectedUserId ? selectedUserId : "");
+      const projectLabel = selectedProject?.name ?? (selectedProjectId ? selectedProjectId : (personLabel || companyLabel));
+      const documentNumber = `TF-${monthKey.replace("-", "")}-${(selectedProjectId || "ALL").slice(0, 6).toUpperCase()}-${new Date().getDate().toString().padStart(2, "0")}`;
 
       const isUserReport = Boolean(selectedUserId);
       const tableTitle = isUserReport ? "Проекты" : "Сотрудники";
@@ -666,7 +684,15 @@ export default function ReportsPage() {
             name: nameMap.get(uid) ?? uid,
             days,
           }))
-        : [];
+        : selectedUserId
+          ? [
+              {
+                uid: selectedUserId,
+                name: personLabel || selectedUserId,
+                days: userDayMinutesTotals[selectedUserId] ?? {},
+              },
+            ]
+          : [];
 
       const detailsBlocks = dailyDetails
         .map((detail) => {
@@ -704,11 +730,11 @@ export default function ReportsPage() {
         })
         .join("");
 
-      const dayHtml = selectedProjectId
+      const dayHtml = selectedProjectId || selectedUserId
         ? `
       <div class="page page--details">
         <div class="details-title">Детализация по дням</div>
-        <div class="details-meta">Проект: ${escapeHtml(String(projectLabel))}</div>
+        ${selectedProjectId ? `<div class="details-meta">Проект: ${escapeHtml(String(projectLabel))}</div>` : personLabel ? `<div class="details-meta">Сотрудник: ${escapeHtml(String(personLabel))}</div>` : ""}
         <div class="details-meta">Документ № ${documentNumber}</div>
         <div class="details-meta">${escapeHtml(monthLabelFromKey(monthKey))}</div>
         <div class="details-gap"></div>
@@ -857,7 +883,8 @@ export default function ReportsPage() {
       a.href = url;
       a.download = filename;
       a.click();
-      URL.revokeObjectURL(url);    })();
+      URL.revokeObjectURL(url);
+    })().finally(() => setIsPdfLoading(false));
   }
 
   function downloadCsv() {
@@ -1054,7 +1081,7 @@ export default function ReportsPage() {
 
             </button>
 
-            <button className="btn btn-outline w-full" onClick={downloadPdf} disabled={projectStats.length === 0 && userTotals.length === 0}>
+            <button className="btn btn-outline w-full" onClick={downloadPdf} disabled={(projectStats.length === 0 && userTotals.length === 0) || isPdfLoading}>
 
              Скачать PDF
 

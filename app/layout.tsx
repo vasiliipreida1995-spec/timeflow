@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Fraunces, Space_Grotesk } from "next/font/google";
+import PublicShell from "../components/PublicShell";
 import "./globals.css";
 
 const display = Fraunces({
@@ -26,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="ru" data-scroll-behavior="smooth">
       <body className={`${display.variable} ${body.variable} antialiased`}>
-        {children}
+        <PublicShell>{children}</PublicShell>
       </body>
     </html>
   );
