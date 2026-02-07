@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "../../../lib/firebaseAdmin";
-import { queryDb } from "../../../lib/db";
+import { adminAuth } from "../../../../lib/firebaseAdmin";
+import { queryDb } from "../../../../lib/db";
 
 async function requireAuth(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
