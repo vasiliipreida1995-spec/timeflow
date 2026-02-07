@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 
 
@@ -146,6 +146,9 @@ export default function ReportsPage() {
 
   const [projectUserMinutes, setProjectUserMinutes] = useState<Record<string, Record<string, number>>>({});
   const [projectDayMinutes, setProjectDayMinutes] = useState<Record<string, Record<string, number>>>({});
+  const [projectUserDayMinutes, setProjectUserDayMinutes] = useState<
+    Record<string, Record<string, Record<string, number>>>
+  >({});
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
 
@@ -233,6 +236,7 @@ export default function ReportsPage() {
 
       setTimeout(() => setProjectUserMinutes({}), 0);
       setTimeout(() => setProjectDayMinutes({}), 0);
+      setTimeout(() => setProjectUserDayMinutes({}), 0);
 
       return;
 
@@ -254,6 +258,7 @@ export default function ReportsPage() {
 
         userMinutes: Map<string, number>;
         dayMinutes: Map<string, number>;
+        userDayMinutes: Map<string, Map<string, number>>;
 
       }
 
@@ -268,6 +273,7 @@ export default function ReportsPage() {
       const userAgg = new Map<string, number>();
 
       const perProjectUsers: Record<string, Record<string, number>> = {};
+      const perProjectUserDays: Record<string, Record<string, Record<string, number>>> = {};
 
 
 
@@ -298,6 +304,15 @@ export default function ReportsPage() {
         });
 
         perProjectUsers[entry.project.id] = localMap;
+        const userDays: Record<string, Record<string, number>> = {};
+        entry.userDayMinutes.forEach((days, uid) => {
+          const dayMap: Record<string, number> = {};
+          days.forEach((mins, day) => {
+            dayMap[day] = mins;
+          });
+          userDays[uid] = dayMap;
+        });
+        perProjectUserDays[entry.project.id] = userDays;
 
       });
 
@@ -333,6 +348,7 @@ export default function ReportsPage() {
         perProjectDays[entry.project.id] = dayMap;
       });
       setProjectDayMinutes(perProjectDays);
+      setProjectUserDayMinutes(perProjectUserDays);
 
     };
 
@@ -358,6 +374,7 @@ export default function ReportsPage() {
 
         const userMinutes = new Map<string, number>();
         const dayMinutes = new Map<string, number>();
+        const userDayMinutes = new Map<string, Map<string, number>>();
 
 
 
@@ -379,10 +396,16 @@ export default function ReportsPage() {
 
           const days = data?.days ?? {};
           if (days && typeof days === "object") {
+            let userDayMap = userDayMinutes.get(uid);
+            if (!userDayMap) {
+              userDayMap = new Map<string, number>();
+              userDayMinutes.set(uid, userDayMap);
+            }
             Object.entries(days as Record<string, number>).forEach(([day, value]) => {
               const dayMinutesValue = Number(value ?? 0);
               if (Number.isNaN(dayMinutesValue)) return;
               dayMinutes.set(day, (dayMinutes.get(day) ?? 0) + dayMinutesValue);
+              userDayMap!.set(day, (userDayMap!.get(day) ?? 0) + dayMinutesValue);
             });
           }
 
@@ -390,7 +413,7 @@ export default function ReportsPage() {
 
 
 
-        buckets.set(project.id, { project, totalMinutes: total, users, userMinutes, dayMinutes });
+        buckets.set(project.id, { project, totalMinutes: total, users, userMinutes, dayMinutes, userDayMinutes });
 
         update();
 
@@ -541,72 +564,55 @@ export default function ReportsPage() {
   const filteredAvgPerUser = filteredPeopleCount ? filteredTotalMinutes / filteredPeopleCount : 0;
 
   const filteredAvgPerProject = filteredProjectCount ? filteredTotalMinutes / filteredProjectCount : 0;
+  function downloadPdf() {
+    return (async () => {
+      const totalHours = formatHours(filteredTotalMinutes);
+      const peopleCount = filteredPeopleCount;
 
-
-
-    function downloadPdf() {
-    const totalHours = formatHours(filteredTotalMinutes);
-    const peopleCount = filteredPeopleCount;
-
-    const projectRows = (selectedUserId
-      ? perUserProjectRows
-      : selectedProjectId
-        ? projectStats.filter((p) => p.id === selectedProjectId)
-        : projectStats
-    )
-      .map(
-        (p, index) => `
+      const projectRows = (selectedUserId
+        ? perUserProjectRows
+        : selectedProjectId
+          ? projectStats.filter((p) => p.id === selectedProjectId)
+          : projectStats
+      )
+        .map(
+          (p, index) => `
           <tr>
             <td class="num">${index + 1}</td>
             <td class="name">${escapeHtml(String(p.name))}</td>
             <td class="value">${formatHours(p.minutes)} </td>
           </tr>
         `
-      )
-      .join("");
+        )
+        .join("");
 
-    const peopleRows = (selectedProjectId
-      ? filteredUserTotals
-      : selectedUserId
-        ? (selectedUser ? [selectedUser] : [])
-        : userTotals
-    )
-      .map(
-        (u, index) => `
+      const peopleRows = (selectedProjectId
+        ? filteredUserTotals
+        : selectedUserId
+          ? (selectedUser ? [selectedUser] : [])
+          : userTotals
+      )
+        .map(
+          (u, index) => `
           <tr>
             <td class="num">${index + 1}</td>
             <td class="name">${escapeHtml(String(u.name))}</td>
             <td class="value">${formatHours(u.minutes)} </td>
           </tr>
         `
-      )
-      .join("");
+        )
+        .join("");
 
-    const dayRows = selectedProjectId
-      ? Object.entries(projectDayMinutes[selectedProjectId] ?? {})
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(
-            ([day, minutes], index) => `
-              <tr>
-                <td class="num">${index + 1}</td>
-                <td class="name">${escapeHtml(dayLabelFromKey(day))}</td>
-                <td class="value">${formatHours(minutes)} </td>
-              </tr>
-            `
-          )
-          .join("")
-      : "";
+      const projectLabel = selectedProject?.name ?? (selectedProjectId ? selectedProjectId : companyName || "Timeflow Ops");
+      const personLabel = selectedUser?.name ?? (selectedUserId ? selectedUserId : "");
+      const documentNumber = `TF-${monthKey.replace("-", "")}-${(selectedProjectId || "ALL").slice(0, 6).toUpperCase()}-${new Date().getDate().toString().padStart(2, "0")}`;
+      const companyLabel = companyName || "Timeflow Ops";
 
-    const projectLabel = selectedProject?.name ?? (selectedProjectId ? selectedProjectId : "Timeflow Ops");
-    const personLabel = selectedUser?.name ?? (selectedUserId ? selectedUserId : "");
-    const docNumber = `TF-${monthKey.replace("-", "")}-${(selectedProjectId || "ALL").slice(0, 6).toUpperCase()}-${new Date().getDate().toString().padStart(2, "0")}`;
-    const companyLabel = companyName || "Timeflow Ops";
+      const isUserReport = Boolean(selectedUserId);
+      const tableTitle = isUserReport ? "Проекты" : "Сотрудники";
+      const tableRows = isUserReport ? projectRows : peopleRows;
 
-    const isUserReport = Boolean(selectedUserId);
-    const tableTitle = isUserReport ? "Проекты" : "Сотрудники";
-    const tableRows = isUserReport ? projectRows : peopleRows;
-
-        const pageHtml = `
+      const pageHtml = `
       <div class="page">
         <div class="header-band">
           <div class="header-row">
@@ -614,7 +620,7 @@ export default function ReportsPage() {
             <div class="header-copy">
               <div class="header-title">${escapeHtml(String(projectLabel))}</div>
               <div class="header-sub">Отчёт по рабочим часам</div>
-              <div class="header-sub">Документ № ${docNumber}</div>
+              <div class="header-sub">Документ № ${documentNumber}</div>
               <div class="header-sub">${escapeHtml(monthLabelFromKey(monthKey))}</div>
               ${personLabel ? `<div class="header-sub">Сотрудник: ${escapeHtml(String(personLabel))}</div>` : ""}
             </div>
@@ -650,27 +656,63 @@ export default function ReportsPage() {
       </div>
     `;
 
-    const dayHtml = selectedProjectId
-      ? `
+      const nameMap = new Map<string, string>();
+      userTotals.forEach((u) => nameMap.set(u.userId, u.name));
+      filteredUserTotals.forEach((u) => nameMap.set(u.userId, u.name));
+
+      const dailyDetails = selectedProjectId
+        ? Object.entries(projectUserDayMinutes[selectedProjectId] ?? {}).map(([uid, days]) => ({
+            uid,
+            name: nameMap.get(uid) ?? uid,
+            days,
+          }))
+        : [];
+
+      const detailsBlocks = dailyDetails
+        .map((detail) => {
+          const dayRows = Object.entries(detail.days)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(
+              ([day, minutes], index) => `
+              <tr>
+                <td class="num">${index + 1}</td>
+                <td class="name">${escapeHtml(dayLabelFromKey(day))}</td>
+                <td class="value">${formatHours(minutes)} </td>
+              </tr>
+            `
+            )
+            .join("");
+
+          return `
+            <div class="details-person">
+              <div class="details-person__name">${escapeHtml(String(detail.name))}</div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Дата</th>
+                      <th class="value">Часы</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${dayRows || `<tr><td colspan="2">Нет данных по дням</td></tr>`}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      const dayHtml = selectedProjectId
+        ? `
       <div class="page page--details">
         <div class="details-title">Детализация по дням</div>
         <div class="details-meta">Проект: ${escapeHtml(String(projectLabel))}</div>
-        <div class="details-meta">Документ № ${docNumber}</div>
+        <div class="details-meta">Документ № ${documentNumber}</div>
         <div class="details-meta">${escapeHtml(monthLabelFromKey(monthKey))}</div>
         <div class="details-gap"></div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Дата</th>
-                <th class="value">Часы</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${dayRows || `<tr><td colspan="2">Нет данных по дням</td></tr>`}
-            </tbody>
-          </table>
-        </div>
+        ${detailsBlocks || `<div class="details-empty">Нет данных по дням</div>`}
         <div class="details-spacer"></div>
         <div class="sign-row">
           <div>
@@ -681,14 +723,16 @@ export default function ReportsPage() {
         </div>
       </div>
       `
-      : "";
-const html = `
+        : "";
+
+      const html = `
       <!doctype html>
       <html lang="ru">
       <head>
         <meta charset="utf-8" />
         <title>Timeflow Report</title>
         <style>  :root { color-scheme: light; }
+  @page { size: A4; margin: 0; }
   body {
     font-family: "Roboto", "Segoe UI", "Inter", Tahoma, sans-serif;
     margin: 0;
@@ -697,7 +741,8 @@ const html = `
   }
   .page {
     position: relative;
-    min-height: 100vh;
+    width: 210mm;
+    min-height: 297mm;
     background: #ffffff;
   }
   .page + .page { page-break-before: always; }
@@ -758,11 +803,15 @@ const html = `
   tbody td { padding: 10px 12px; border-bottom: 1px solid #eef2f7; }
   tbody tr:last-child td { border-bottom: none; }
   td.value { width: 120px; text-align: right; font-weight: 600; }
+  td.num { width: 44px; text-align: right; color: #64748b; }
   .page--details { padding: 36px; }
   .details-title { font-size: 18px; font-weight: 700; color: #1f2937; }
   .details-meta { margin-top: 6px; font-size: 12px; color: #475569; }
   .details-gap { height: 24px; }
   .details-spacer { height: 48px; }
+  .details-empty { color: #64748b; font-size: 12px; }
+  .details-person { margin-bottom: 24px; }
+  .details-person__name { font-weight: 700; color: #4b5563; margin-bottom: 8px; }
   .sign-row {
     margin-top: 24px;
     display: flex;
@@ -784,15 +833,31 @@ const html = `
       <body>
         ${pageHtml}
         ${dayHtml}
-        <script>window.print();</script>
       </body>
       </html>
     `;
 
-    const w = window.open("", "_blank", "width=1200,height=900");
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return;
+
+      const filename = `report_${documentNumber}_${monthKey.replace("-", "_")}.pdf`;
+      const res = await fetch("/api/reports/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ html, filename }),
+      });
+      if (!res.ok) return;
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);    })();
   }
 
   function downloadCsv() {
@@ -1033,6 +1098,14 @@ const html = `
   );
 
 }
+
+
+
+
+
+
+
+
 
 
 
