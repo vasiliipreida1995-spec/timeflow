@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -64,6 +64,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [profileProjectName, setProfileProjectName] = useState("");
   const [profileProjectId, setProfileProjectId] = useState("");
   const [profileRole, setProfileRole] = useState("");
+  const [subActive, setSubActive] = useState<boolean | null>(null);
+  const [subPlan, setSubPlan] = useState<string | null>(null);
+  const [subLoading, setSubLoading] = useState(false);
+  const [showSubModal, setShowSubModal] = useState(false);
   useEffect(() => {
     let unsub: (() => void) | null = null;
     const unsubAuth = onAuthStateChanged(auth, (user) => {
@@ -78,6 +82,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (unsub) unsub();
     };
   }, []);
+  useEffect(() => {
+    if (!email) return;
+    let active = true;
+    const load = async () => {
+      setSubLoading(true);
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        if (!token) return;
+        const res = await fetch("/api/subscription/status", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        const isActive = Boolean(data?.active);
+        setSubActive(isActive);
+        setSubPlan(data?.plan ?? null);
+        setShowSubModal(!isActive);
+      } finally {
+        if (active) setSubLoading(false);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [email]);
   const monthKey = useMemo(() => {
     const d = new Date();
     const m = (d.getMonth() + 1).toString().padStart(2, "0");
@@ -541,6 +572,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {showSubModal && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/60 p-4">
+          <div className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-[#0f1216] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.55)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-muted">Первый вход</p>
+                <h3 className="mt-2 text-xl font-semibold">Подключите подписку</h3>
+              </div>
+              <button className="btn btn-outline" onClick={() => setShowSubModal(false)}>Закрыть</button>
+            </div>
+            <p className="mt-4 text-sm text-muted">
+              Это ваш первый вход через web сервис. Купите подписку онлайн или свяжитесь с техподдержкой для обсуждения и активации.
+            </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <a className="btn btn-primary" href="/pricing">Смотреть тарифы</a>
+              <a className="btn btn-outline" href="mailto:support@timeflow.app">Связаться с поддержкой</a>
+            </div>
+            {subLoading && <p className="mt-4 text-xs text-muted">Проверяем подписку...</p>}
+            {subPlan && <p className="mt-2 text-xs text-muted">Текущий план: {subPlan}</p>}
           </div>
         </div>
       )}

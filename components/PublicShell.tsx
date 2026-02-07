@@ -3,7 +3,7 @@
 import PublicHeader from "./PublicHeader";
 import { usePathname } from "next/navigation";
 
-const HIDE_PREFIXES = ["/app"];
+const HIDE_PREFIXES = ["/app", "/admin"];
 
 export default function PublicShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
