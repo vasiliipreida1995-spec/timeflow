@@ -217,60 +217,77 @@ export default function AdminPage() {
           {!loading && users.length === 0 && (
             <div className="glass card-hover rounded-3xl p-6 text-sm text-muted">Нет пользователей.</div>
           )}
-          {users.map((u) => (
-            <div key={u.user_id} className="glass card-hover rounded-3xl p-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold">{u.email || u.user_id}</p>
-                  <p className="text-xs text-muted">UID: {u.user_id}</p>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <div className="grid gap-2">
-                    <p className="text-xs text-muted">Роль</p>
-                    <select
-                      className="input"
-                      defaultValue={u.role ?? "user"}
-                      onChange={(e) => setRole(u.user_id, e.target.value)}
-                      disabled={saving === u.user_id}
-                    >
-                      {ROLE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="grid gap-2">
-                    <p className="text-xs text-muted">Подписка</p>
-                    <div className="flex flex-wrap gap-2">
-                      <select className="input" id={`plan-${u.user_id}`} defaultValue={u.plan ?? "start"}>
-                        {PLAN_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                      <select className="input" id={`status-${u.user_id}`} defaultValue={u.status ?? "active"}>
-                        <option value="active">Активна</option>
-                        <option value="inactive">Неактивна</option>
-                      </select>
-                      <input className="input" id={`ends-${u.user_id}`} type="date" defaultValue={u.ends_at ? u.ends_at.slice(0, 10) : ""} />
-                      <button
-                        className="btn btn-primary"
-                        disabled={saving === u.user_id}
-                        onClick={() => {
-                          const planEl = document.getElementById(`plan-${u.user_id}`) as HTMLSelectElement | null;
-                          const statusEl = document.getElementById(`status-${u.user_id}`) as HTMLSelectElement | null;
-                          const endsEl = document.getElementById(`ends-${u.user_id}`) as HTMLInputElement | null;
-                          if (!planEl || !statusEl || !endsEl) return;
-                          setSubscription(u.user_id, planEl.value, statusEl.value, endsEl.value);
-                        }}
-                      >
-                        Сохранить
-                      </button>
-                    </div>
-                    <p className="text-xs text-muted">Текущий план: {u.plan ?? "нет"} · до {formatDate(u.ends_at)}</p>
-                  </div>
-                </div>
-              </div>
+          <div className="glass card-hover rounded-3xl p-4">
+            <div className="overflow-auto">
+              <table className="min-w-[900px] w-full text-sm">
+                <thead className="text-xs uppercase tracking-[0.2em] text-muted">
+                  <tr className="border-b border-soft">
+                    <th className="py-3 text-left font-semibold">Пользователь</th>
+                    <th className="py-3 text-left font-semibold">Роль</th>
+                    <th className="py-3 text-left font-semibold">Подписка</th>
+                    <th className="py-3 text-left font-semibold">Статус</th>
+                    <th className="py-3 text-left font-semibold">До</th>
+                    <th className="py-3 text-left font-semibold">Действия</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-soft">
+                  {users.map((u) => (
+                    <tr key={u.user_id} className="align-top">
+                      <td className="py-4 pr-4">
+                        <div className="font-semibold">{u.email || u.user_id}</div>
+                        <div className="text-xs text-muted">UID: {u.user_id}</div>
+                      </td>
+                      <td className="py-4 pr-4">
+                        <select
+                          className="input"
+                          defaultValue={u.role ?? "user"}
+                          onChange={(e) => setRole(u.user_id, e.target.value)}
+                          disabled={saving === u.user_id}
+                        >
+                          {ROLE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="py-4 pr-4">
+                        <select className="input" id={`plan-${u.user_id}`} defaultValue={u.plan ?? "start"}>
+                          {PLAN_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="py-4 pr-4">
+                        <select className="input" id={`status-${u.user_id}`} defaultValue={u.status ?? "active"}>
+                          <option value="active">Активна</option>
+                          <option value="inactive">Неактивна</option>
+                        </select>
+                      </td>
+                      <td className="py-4 pr-4">
+                        <input className="input" id={`ends-${u.user_id}`} type="date" defaultValue={u.ends_at ? u.ends_at.slice(0, 10) : ""} />
+                        <div className="mt-2 text-xs text-muted">{formatDate(u.ends_at)}</div>
+                      </td>
+                      <td className="py-4">
+                        <button
+                          className="btn btn-primary"
+                          disabled={saving === u.user_id}
+                          onClick={() => {
+                            const planEl = document.getElementById(`plan-${u.user_id}`) as HTMLSelectElement | null;
+                            const statusEl = document.getElementById(`status-${u.user_id}`) as HTMLSelectElement | null;
+                            const endsEl = document.getElementById(`ends-${u.user_id}`) as HTMLInputElement | null;
+                            if (!planEl || !statusEl || !endsEl) return;
+                            setSubscription(u.user_id, planEl.value, statusEl.value, endsEl.value);
+                          }}
+                        >
+                          Сохранить
+                        </button>
+                        <div className="mt-2 text-xs text-muted">Текущий план: {u.plan ?? "нет"}</div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
+          </div>
         </div>
       </main>
     </div>
