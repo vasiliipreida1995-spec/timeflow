@@ -34,6 +34,22 @@ export default function AdminPage() {
   const [saving, setSaving] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const totalUsers = users.length;
+  const activeSubs = users.filter((u) => u.plan && u.status === "active").length;
+  const admins = users.filter((u) => u.role === "manager" || u.role === "superadmin").length;
+  const expiringSoon = users.filter((u) => {
+    if (!u.ends_at) return false;
+    const d = new Date(u.ends_at);
+    if (Number.isNaN(d.getTime())) return false;
+    const diff = d.getTime() - Date.now();
+    return diff > 0 && diff <= 1000 * 60 * 60 * 24 * 7;
+  }).length;
+  const formatDate = (value: string | null) => {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("ru-RU");
+  };
 
   const load = async () => {
     setLoading(true);
@@ -169,6 +185,28 @@ export default function AdminPage() {
             <button className="btn btn-outline" onClick={load} disabled={loading}>Обновить</button>
           </div>
         </div>
+        <div className="grid gap-4 lg:grid-cols-4">
+          <div className="glass card-hover rounded-3xl p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-muted">Сводка админки</p>
+            <p className="mt-3 text-3xl font-semibold">{totalUsers}</p>
+            <p className="mt-2 text-sm text-muted">Всего пользователей</p>
+          </div>
+          <div className="glass card-hover rounded-3xl p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-muted">Подписки</p>
+            <p className="mt-3 text-3xl font-semibold">{activeSubs}</p>
+            <p className="mt-2 text-sm text-muted">Активные планы</p>
+          </div>
+          <div className="glass card-hover rounded-3xl p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-muted">Руководители</p>
+            <p className="mt-3 text-3xl font-semibold">{admins}</p>
+            <p className="mt-2 text-sm text-muted">Роли manager/superadmin</p>
+          </div>
+          <div className="glass card-hover rounded-3xl p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-muted">Истекают</p>
+            <p className="mt-3 text-3xl font-semibold">{expiringSoon}</p>
+            <p className="mt-2 text-sm text-muted">В течение 7 дней</p>
+          </div>
+        </div>
 
         {error && (
           <div className="glass card-hover rounded-3xl p-6 text-sm text-rose-200">{error}</div>
@@ -227,7 +265,7 @@ export default function AdminPage() {
                         Сохранить
                       </button>
                     </div>
-                    <p className="text-xs text-muted">Текущий план: {u.plan ?? "нет"}</p>
+                    <p className="text-xs text-muted">Текущий план: {u.plan ?? "нет"} · до {formatDate(u.ends_at)}</p>
                   </div>
                 </div>
               </div>
