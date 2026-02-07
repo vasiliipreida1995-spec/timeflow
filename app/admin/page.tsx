@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { auth } from "../../lib/firebase";
 
 const PLAN_OPTIONS = [
@@ -26,10 +27,13 @@ type UserRow = {
 };
 
 export default function AdminPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -55,8 +59,34 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    load();
+    const unsub = auth.onAuthStateChanged((user) => {
+      setSignedIn(Boolean(user));
+      setAuthReady(true);
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+      load();
+    });
+    return () => unsub();
   }, []);
+
+  if (!authReady) {
+    return (
+      <div className="min-h-screen grid place-items-center text-sm text-muted">
+        Проверяем доступ...
+      </div>
+    );
+  }
+
+  if (!signedIn) {
+    return (
+      <div className="min-h-screen grid place-items-center text-sm text-muted">
+        Требуется вход.
+      </div>
+    );
+  }
+
 
   const setRole = async (userId: string, role: string) => {
     setSaving(userId);
