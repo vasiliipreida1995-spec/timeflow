@@ -582,7 +582,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
     };
   }, [members]);
 
-  const visibleSchedules = isManager ? schedules : schedules.filter((s) => s.userId === userId);
+  const visibleSchedules = schedules;
 
   async function createSchedule() {
     if (!createUserId || !createDate || !createTime) return;
