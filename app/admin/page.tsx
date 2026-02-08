@@ -308,8 +308,6 @@ export default function AdminPage() {
                       ))}
                     </div>
                   </div>
-                </div>
-              </div>
             </>
           )}
           {activeSection === "users" && (
@@ -425,7 +423,6 @@ export default function AdminPage() {
                   </table>
                 </div>
               </div>
-            </div>
           )}
           {activeSection === "subscriptions" && (
             <div className="grid gap-4">
@@ -449,8 +446,6 @@ export default function AdminPage() {
                     <p className="mt-2 text-2xl font-semibold">{expiringSoon}</p>
                   </div>
                 </div>
-              </div>
-            </div>
           )}
           {activeSection === "projects" && (
             <div className="grid gap-4">
@@ -479,7 +474,6 @@ export default function AdminPage() {
               </div>
             </div>
           )}
-        </div>
           </div>
         </div>
       </main>
