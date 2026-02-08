@@ -2,17 +2,32 @@
 
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { auth, db } from "../../lib/firebase";
 import { subscribeWebUser, updateWebUser, type WebRole } from "../../lib/webUser";
 import { logoutUser } from "../../lib/userAccess";
 
-type ProjectDoc = { name?: string | null };
+type ProjectDoc = { name?: string | null; archived?: boolean | null };
 
 type ProjectItem = {
   id: string;
   name: string;
+};
+
+type MemberDoc = {
+  projectId?: string | null;
+  role?: string | null;
 };
 
 export default function RolePage() {
@@ -23,9 +38,13 @@ export default function RolePage() {
   const [defaultProjectId, setDefaultProjectId] = useState<string>("");
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [allProjects, setAllProjects] = useState<ProjectItem[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<ProjectItem[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [projectsError, setProjectsError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [requestProjectId, setRequestProjectId] = useState<string>("");
+  const [requesting, setRequesting] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,23 +84,45 @@ export default function RolePage() {
         const memberSnap = await getDocs(
           query(collection(db, "project_members"), where("userId", "==", uid))
         );
-        const map = new Map<string, string>();
+        const projectMap = new Map<string, string>();
+        const pendingList: ProjectItem[] = [];
+
         await Promise.all(
           memberSnap.docs.map(async (docSnap) => {
-            const data = docSnap.data() as { projectId?: string | null };
+            const data = docSnap.data() as MemberDoc;
             const projectId = data?.projectId ?? "";
-            if (!projectId || map.has(projectId)) return;
+            if (!projectId) return;
+            const role = data?.role ?? "";
             const projectSnap = await getDoc(doc(db, "projects", projectId));
             const projectData = projectSnap.exists() ? (projectSnap.data() as ProjectDoc) : null;
-            map.set(projectId, projectData?.name ?? projectId);
+            const name = projectData?.name ?? projectId;
+            if (role === "pending") {
+              pendingList.push({ id: projectId, name });
+              return;
+            }
+            projectMap.set(projectId, name);
           })
         );
-        const list = Array.from(map, ([id, name]) => ({ id, name }))
+
+        const projectList = Array.from(projectMap, ([id, name]) => ({ id, name }))
           .sort((a, b) => a.name.localeCompare(b.name));
+
+        const projectsSnap = await getDocs(
+          query(collection(db, "projects"), where("archived", "==", false))
+        );
+        const allList = projectsSnap.docs
+          .map((docSnap) => {
+            const data = docSnap.data() as ProjectDoc;
+            return { id: docSnap.id, name: data?.name ?? docSnap.id };
+          })
+          .sort((a, b) => a.name.localeCompare(b.name));
+
         if (!active) return;
-        setProjects(list);
-        if (!defaultProjectId && list.length === 1) {
-          setSelectedProjectId(list[0].id);
+        setProjects(projectList);
+        setPendingRequests(pendingList);
+        setAllProjects(allList);
+        if (!defaultProjectId && projectList.length === 1) {
+          setSelectedProjectId(projectList[0].id);
         }
       } catch (e: unknown) {
         if (!active) return;
@@ -114,11 +155,36 @@ export default function RolePage() {
     router.replace(`/app/projects/${selectedProjectId}`);
   }
 
+  async function requestAccess() {
+    if (!uid || !requestProjectId) return;
+    setRequesting(true);
+    await setDoc(
+      doc(db, "project_members", `${requestProjectId}_${uid}`),
+      {
+        projectId: requestProjectId,
+        userId: uid,
+        role: "pending",
+        requestedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    setRequesting(false);
+    setRequestProjectId("");
+  }
+
+  async function cancelRequest(projectId: string) {
+    if (!uid || !projectId) return;
+    await deleteDoc(doc(db, "project_members", `${projectId}_${uid}`));
+  }
+
   if (loading) {
     return <div className="min-h-screen grid place-items-center">...</div>;
   }
 
   const showWorkerStep = pendingRole === "worker" || currentRole === "worker";
+  const memberIds = new Set(projects.map((p) => p.id));
+  const pendingIds = new Set(pendingRequests.map((p) => p.id));
+  const availableProjects = allProjects.filter((p) => !memberIds.has(p.id) && !pendingIds.has(p.id));
 
   return (
     <div className="min-h-screen grid place-items-center px-6">
@@ -128,13 +194,13 @@ export default function RolePage() {
 
         {!showWorkerStep && (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <button className="panel p-5 text-left card-hover" onClick={() => setRole("manager")}> 
+            <button className="panel p-5 text-left card-hover" onClick={() => setRole("manager")}>
               <p className="text-sm uppercase tracking-[0.25em] text-muted">Manager</p>
               <h2 className="mt-3 text-lg font-semibold">Менеджер</h2>
               <p className="mt-2 text-sm text-muted">Доступ к сменам, отчётам и подтверждениям.</p>
             </button>
 
-            <button className="panel p-5 text-left card-hover" onClick={() => setRole("worker")}> 
+            <button className="panel p-5 text-left card-hover" onClick={() => setRole("worker")}>
               <p className="text-sm uppercase tracking-[0.25em] text-muted">Worker</p>
               <h2 className="mt-3 text-lg font-semibold">Работник</h2>
               <p className="mt-2 text-sm text-muted">Доступ к своим проектам и подтверждениям.</p>
@@ -154,7 +220,7 @@ export default function RolePage() {
 
             {!projectsLoading && projects.length === 0 && (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
-                Вы пока не добавлены ни в один проект. Попросите менеджера добавить вас.
+                Вы пока не добавлены ни в один проект. Подайте заявку на участие.
               </div>
             )}
 
@@ -175,6 +241,46 @@ export default function RolePage() {
                 <button className="btn btn-primary" onClick={saveWorkerProject} disabled={!selectedProjectId || saving}>
                   {saving ? "Сохраняем..." : "Сохранить и перейти"}
                 </button>
+              </div>
+            )}
+
+            {projects.length === 0 && (
+              <div className="grid gap-3">
+                {pendingRequests.length > 0 && (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
+                    <div className="font-semibold text-white">Заявка на рассмотрении</div>
+                    <div className="mt-2 grid gap-2">
+                      {pendingRequests.map((p) => (
+                        <div key={p.id} className="flex flex-wrap items-center justify-between gap-2">
+                          <span>{p.name}</span>
+                          <button className="btn btn-outline" onClick={() => cancelRequest(p.id)}>
+                            Отозвать
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {availableProjects.length > 0 && (
+                  <div className="grid gap-2">
+                    <select
+                      className="input"
+                      value={requestProjectId}
+                      onChange={(e) => setRequestProjectId(e.target.value)}
+                    >
+                      <option value="">Выберите проект для заявки</option>
+                      {availableProjects.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button className="btn btn-primary" onClick={requestAccess} disabled={!requestProjectId || requesting}>
+                      {requesting ? "Отправляем..." : "Подать заявку"}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 // @ts-nocheck
 "use client";
 
@@ -29,7 +29,7 @@ export default function ProjectPage() {
   const projectId = params?.projectId as string | undefined;
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [projectName, setProjectName] = useState<string>("Проект");
+  const [projectName, setProjectName] = useState<string>("РџСЂРѕРµРєС‚");
   const [loadingRole, setLoadingRole] = useState(true);
   const [isManager, setIsManager] = useState(false);
   const [isMember, setIsMember] = useState(false);
@@ -50,7 +50,7 @@ export default function ProjectPage() {
     const unsubProject = safeOnSnapshot(doc(db, "projects", projectId), (snap) => {
       if (snap.exists()) {
         const data = snap.data() as any;
-        setProjectName(data?.name ?? "Проект");
+        setProjectName(data?.name ?? "РџСЂРѕРµРєС‚");
       }
     });
 
@@ -109,17 +109,17 @@ export default function ProjectPage() {
   if (!projectId) {
     return (
       <div className="panel motion p-6">
-        <h1 className="text-2xl font-semibold">Проект не найден</h1>
+        <h1 className="text-2xl font-semibold">РџСЂРѕРµРєС‚ РЅРµ РЅР°Р№РґРµРЅ</h1>
       </div>
     );
   }
 
   if (loadingRole) {
-    return <div className="panel motion p-6">Загрузка...</div>;
+    return <div className="panel motion p-6">Р—Р°РіСЂСѓР·РєР°...</div>;
   }
 
   if (!userId) {
-    return <div className="panel motion p-6">Нужно войти в аккаунт.</div>;
+    return <div className="panel motion p-6">РќСѓР¶РЅРѕ РІРѕР№С‚Рё РІ Р°РєРєР°СѓРЅС‚.</div>;
   }
 
   if (showRules) {
@@ -143,23 +143,23 @@ export default function ProjectPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold">{projectName}</h1>
-            <p className="text-sm text-muted">Проект: {projectId}</p>
+            <p className="text-sm text-muted">РџСЂРѕРµРєС‚: {projectId}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button className={`btn ${tab === "chat" ? "btn-primary" : "btn-outline"}`} onClick={() => setTab("chat")}>
-              Чат
+              Р§Р°С‚
             </button>
             <button className={`btn ${tab === "pinned" ? "btn-primary" : "btn-outline"}`} onClick={() => setTab("pinned")}>
-              Закрепы
+              Р—Р°РєСЂРµРїС‹
             </button>
             <button className={`btn ${tab === "schedule" ? "btn-primary" : "btn-outline"}`} onClick={() => setTab("schedule")}>
-              Расписание
+              Р Р°СЃРїРёСЃР°РЅРёРµ
             </button>
             <button className={`btn ${tab === "people" ? "btn-primary" : "btn-outline"}`} onClick={() => setTab("people")}>
-              Люди
+              Р›СЋРґРё
             </button>
             <button className={`btn ${tab === "hours" ? "btn-primary" : "btn-outline"}`} onClick={() => setTab("hours")}>
-              Часы
+              Р§Р°СЃС‹
             </button>
           </div>
         </div>
@@ -187,15 +187,15 @@ function JoinProject({
 }) {
   return (
     <div className="panel motion p-6">
-      <h1 className="text-2xl font-semibold">Запрос на вступление</h1>
-      <p className="mt-2 text-sm text-muted">Проект: {projectName || projectId}</p>
+      <h1 className="text-2xl font-semibold">Р—Р°РїСЂРѕСЃ РЅР° РІСЃС‚СѓРїР»РµРЅРёРµ</h1>
+      <p className="mt-2 text-sm text-muted">РџСЂРѕРµРєС‚: {projectName || projectId}</p>
       <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
-        Подайте заявку, чтобы руководитель проекта подтвердил доступ. После подтверждения вы увидите чат,
-        расписание и участников.
+        РџРѕРґР°Р№С‚Рµ Р·Р°СЏРІРєСѓ, С‡С‚РѕР±С‹ СЂСѓРєРѕРІРѕРґРёС‚РµР»СЊ РїСЂРѕРµРєС‚Р° РїРѕРґС‚РІРµСЂРґРёР» РґРѕСЃС‚СѓРї. РџРѕСЃР»Рµ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РІС‹ СѓРІРёРґРёС‚Рµ С‡Р°С‚,
+        СЂР°СЃРїРёСЃР°РЅРёРµ Рё СѓС‡Р°СЃС‚РЅРёРєРѕРІ.
       </div>
       <div className="mt-4 flex flex-wrap gap-3">
         <button className="btn btn-primary" onClick={onApply} disabled={isPending}>
-          {isPending ? "Заявка отправлена" : "Оставить заявку"}
+          {isPending ? "Р—Р°СЏРІРєР° РѕС‚РїСЂР°РІР»РµРЅР°" : "РћСЃС‚Р°РІРёС‚СЊ Р·Р°СЏРІРєСѓ"}
         </button>
       </div>
     </div>
@@ -266,7 +266,7 @@ function ChatTab({
       const avatars: Record<string, string> = {};
       snap.forEach((docSnap) => {
         const data = docSnap.data() as any;
-        names[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
+        names[docSnap.id] = data?.name ?? data?.email ?? "РќРµС‚ РёРјРµРЅРё";
         const avatar = data?.photoURL ?? data?.avatarUrl ?? data?.avatar ?? null;
         if (avatar) avatars[docSnap.id] = avatar;
       });
@@ -292,7 +292,7 @@ function ChatTab({
 
   async function addPinned() {
     if (!isManager) return;
-    const value = window.prompt("Введите закреп");
+    const value = window.prompt("Р’РІРµРґРёС‚Рµ Р·Р°РєСЂРµРї");
     if (!value) return;
     await addDoc(collection(db, "project_chats", projectId, "pinned"), {
       text: value.trim(),
@@ -306,10 +306,10 @@ function ChatTab({
       {pinned.length > 0 && (
         <div className="chat-pinned">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold">Закрепы</p>
+            <p className="text-sm font-semibold">Р—Р°РєСЂРµРїС‹</p>
             {isManager && (
               <button className="btn btn-outline" onClick={addPinned}>
-                Добавить
+                Р”РѕР±Р°РІРёС‚СЊ
               </button>
             )}
           </div>
@@ -336,7 +336,7 @@ function ChatTab({
         >
           {messages.length === 0 && (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
-              Пока нет сообщений в этом чате.
+              РџРѕРєР° РЅРµС‚ СЃРѕРѕР±С‰РµРЅРёР№ РІ СЌС‚РѕРј С‡Р°С‚Рµ.
             </div>
           )}
           {messages.length > 0 && (
@@ -365,7 +365,7 @@ function ChatTab({
                     <div className={`chat-bubble min-w-0 ${isMine ? "ml-auto" : ""}${isSameSender ? " chat-bubble-compact" : ""}`}>
                       {!isMine && !isSameSender && (
                         <div className="mb-1 text-xs text-muted">
-                          {userNames[avatarId] ?? "Нет имени"}
+                          {userNames[avatarId] ?? "РќРµС‚ РёРјРµРЅРё"}
                         </div>
                       )}
                       <div className="chat-text">{m.text ?? ""}</div>
@@ -378,17 +378,17 @@ function ChatTab({
         </div>
 
         <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <label className="text-xs text-muted">Сообщение</label>
+          <label className="text-xs text-muted">РЎРѕРѕР±С‰РµРЅРёРµ</label>
           <textarea
             className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/90"
             rows={3}
-            placeholder="Напишите сообщение"
+            placeholder="РќР°РїРёС€РёС‚Рµ СЃРѕРѕР±С‰РµРЅРёРµ"
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
           <div className="chat-controls">
             <button className="btn btn-primary" onClick={sendMessage} disabled={!text.trim()}>
-              Отправить
+              РћС‚РїСЂР°РІРёС‚СЊ
             </button>
           </div>
         </div>
@@ -411,7 +411,7 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
 
   async function addPinned() {
     if (!isManager) return;
-    const value = window.prompt("Введите закреп");
+    const value = window.prompt("Р’РІРµРґРёС‚Рµ Р·Р°РєСЂРµРї");
     if (!value) return;
     await addDoc(collection(db, "project_chats", projectId, "pinned"), {
       text: value.trim(),
@@ -421,7 +421,7 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
 
   async function editPinned(id: string, currentText: string) {
     if (!isManager) return;
-    const value = window.prompt("Редактировать закреп", currentText);
+    const value = window.prompt("Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ Р·Р°РєСЂРµРї", currentText);
     if (!value) return;
     await updateDoc(doc(db, "project_chats", projectId, "pinned", id), {
       text: value.trim(),
@@ -431,7 +431,7 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
 
   async function deletePinned(id: string) {
     if (!isManager) return;
-    const ok = window.confirm("Удалить закреп?");
+    const ok = window.confirm("РЈРґР°Р»РёС‚СЊ Р·Р°РєСЂРµРї?");
     if (!ok) return;
     await deleteDoc(doc(db, "project_chats", projectId, "pinned", id));
   }
@@ -439,25 +439,25 @@ function PinnedTab({ projectId, isManager }: { projectId: string; isManager: boo
   return (
     <div className="panel motion p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Закрепы</h2>
+        <h2 className="text-lg font-semibold">Р—Р°РєСЂРµРїС‹</h2>
         {isManager && (
           <button className="btn btn-primary" onClick={addPinned}>
-            Добавить
+            Р”РѕР±Р°РІРёС‚СЊ
           </button>
         )}
       </div>
       <div className="mt-4 grid gap-3">
-        {items.length === 0 && <div className="text-sm text-muted">Закрепов пока нет.</div>}
+        {items.length === 0 && <div className="text-sm text-muted">Р—Р°РєСЂРµРїРѕРІ РїРѕРєР° РЅРµС‚.</div>}
         {items.map((p) => (
           <div key={p.id} className="flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
             <div className="text-sm">{p.text}</div>
             {isManager && (
               <div className="flex gap-2">
                 <button className="btn btn-outline" onClick={() => editPinned(p.id, p.text)}>
-                  Редактировать
+                  Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ
                 </button>
                 <button className="btn btn-outline" onClick={() => deletePinned(p.id)}>
-                  Удалить
+                  РЈРґР°Р»РёС‚СЊ
                 </button>
               </div>
             )}
@@ -511,7 +511,7 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
         members.map(async (uid) => {
           const snap = await getDoc(doc(db, "users_public", uid));
           const data = snap.data() as any;
-          return [uid, data?.name ?? data?.email ?? "Нет имени"] as const;
+          return [uid, data?.name ?? data?.email ?? "РќРµС‚ РёРјРµРЅРё"] as const;
         })
       );
       if (!active) return;
@@ -613,42 +613,42 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
       <div className="panel motion p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Расписание</h2>
-            <p className="mt-1 text-sm text-muted">Смены по проекту и подтверждение часов</p>
+            <h2 className="text-lg font-semibold">Р Р°СЃРїРёСЃР°РЅРёРµ</h2>
+            <p className="mt-1 text-sm text-muted">РЎРјРµРЅС‹ РїРѕ РїСЂРѕРµРєС‚Сѓ Рё РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ С‡Р°СЃРѕРІ</p>
           </div>
           {isManager && (
             <button className="btn btn-primary" onClick={() => setCreateOpen((v) => !v)}>
-              {createOpen ? "Скрыть форму" : "Добавить"}
+              {createOpen ? "РЎРєСЂС‹С‚СЊ С„РѕСЂРјСѓ" : "Р”РѕР±Р°РІРёС‚СЊ"}
             </button>
           )}
         </div>
         {createOpen && isManager && (
           <div className="mt-4 grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="grid gap-2">
-              <label className="text-sm text-muted">Участник</label>
+              <label className="text-sm text-muted">РЈС‡Р°СЃС‚РЅРёРє</label>
               <select className="input" value={createUserId} onChange={(e) => setCreateUserId(e.target.value)}>
-                <option value="">Выберите участника</option>
+                <option value="">Р’С‹Р±РµСЂРёС‚Рµ СѓС‡Р°СЃС‚РЅРёРєР°</option>
                 {members.map((uid) => (
                   <option key={uid} value={uid}>
-                    {names[uid] ?? "Нет имени"}
+                    {names[uid] ?? "РќРµС‚ РёРјРµРЅРё"}
                   </option>
                 ))}
               </select>
             </div>
             <div className="grid gap-2">
-              <label className="text-sm text-muted">Дата</label>
+              <label className="text-sm text-muted">Р”Р°С‚Р°</label>
               <input className="input" type="date" value={createDate} onChange={(e) => setCreateDate(e.target.value)} />
             </div>
             <div className="grid gap-2">
-              <label className="text-sm text-muted">Время начала</label>
+              <label className="text-sm text-muted">Р’СЂРµРјСЏ РЅР°С‡Р°Р»Р°</label>
               <input className="input" type="time" value={createTime} onChange={(e) => setCreateTime(e.target.value)} />
             </div>
             <div className="flex flex-wrap gap-3">
               <button className="btn btn-primary" onClick={createSchedule} disabled={submitting}>
-                Создать смену
+                РЎРѕР·РґР°С‚СЊ СЃРјРµРЅСѓ
               </button>
               <button className="btn btn-outline" onClick={() => setCreateOpen(false)} disabled={submitting}>
-                Отмена
+                РћС‚РјРµРЅР°
               </button>
             </div>
           </div>
@@ -657,31 +657,31 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
 
       {confirming && (
         <div className="panel motion p-6">
-          <h3 className="text-lg font-semibold">Подтверждение смены</h3>
-          <p className="mt-1 text-sm text-muted">Укажите фактическое время работы.</p>
+          <h3 className="text-lg font-semibold">РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ СЃРјРµРЅС‹</h3>
+          <p className="mt-1 text-sm text-muted">РЈРєР°Р¶РёС‚Рµ С„Р°РєС‚РёС‡РµСЃРєРѕРµ РІСЂРµРјСЏ СЂР°Р±РѕС‚С‹.</p>
           <div className="mt-4 grid gap-3">
             <div className="grid gap-2">
-              <label className="text-sm text-muted">Начал работу</label>
+              <label className="text-sm text-muted">РќР°С‡Р°Р» СЂР°Р±РѕС‚Сѓ</label>
               <input className="input" type="time" value={confirmStart} onChange={(e) => setConfirmStart(e.target.value)} />
             </div>
             <div className="grid gap-2">
-              <label className="text-sm text-muted">Закончил работу</label>
+              <label className="text-sm text-muted">Р—Р°РєРѕРЅС‡РёР» СЂР°Р±РѕС‚Сѓ</label>
               <input className="input" type="time" value={confirmEnd} onChange={(e) => setConfirmEnd(e.target.value)} />
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
             <button className="btn btn-primary" onClick={confirmShift} disabled={submitting}>
-              Подтвердить
+              РџРѕРґС‚РІРµСЂРґРёС‚СЊ
             </button>
             <button className="btn btn-outline" onClick={() => setConfirming(null)} disabled={submitting}>
-              Отмена
+              РћС‚РјРµРЅР°
             </button>
           </div>
         </div>
       )}
 
       <div className="grid gap-3">
-        {visibleSchedules.length === 0 && <div className="panel motion p-6 text-sm text-muted">Расписаний нет.</div>}
+        {visibleSchedules.length === 0 && <div className="panel motion p-6 text-sm text-muted">Р Р°СЃРїРёСЃР°РЅРёР№ РЅРµС‚.</div>}
         {visibleSchedules.map((schedule) => {
           const planned = schedule?.start?.toDate ? schedule.start.toDate() : null;
           const confirmed = schedule?.scheduleConfirmed === true;
@@ -693,18 +693,18 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
                   {planned ? formatTime(planned) : "--:--"}
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold">{names[scheduleUserId] ?? "Нет имени"}</div>
-                  <div className="text-sm text-muted">{planned ? formatDate(planned) : "Дата не указана"}</div>
+                  <div className="font-semibold">{names[scheduleUserId] ?? "РќРµС‚ РёРјРµРЅРё"}</div>
+                  <div className="text-sm text-muted">{planned ? formatDate(planned) : "Р”Р°С‚Р° РЅРµ СѓРєР°Р·Р°РЅР°"}</div>
                   {planned && (
                     <ScheduleWorkedMinutes projectId={projectId} userId={scheduleUserId} plannedStart={planned} />
                   )}
                 </div>
-                {confirmed && <div className="text-xs text-emerald-300">Подтверждено</div>}
+                {confirmed && <div className="text-xs text-emerald-300">РџРѕРґС‚РІРµСЂР¶РґРµРЅРѕ</div>}
               </div>
               {!confirmed && scheduleUserId === userId && (
                 <div className="mt-4">
                   <button className="btn btn-primary" onClick={() => openConfirm(schedule)}>
-                    Подтвердить смену
+                    РџРѕРґС‚РІРµСЂРґРёС‚СЊ СЃРјРµРЅСѓ
                   </button>
                 </div>
               )}
@@ -718,6 +718,8 @@ function ScheduleTab({ projectId, userId, isManager }: { projectId: string; user
 
 function PeopleTab({ projectId, projectName }: { projectId: string; projectName: string }) {
   const [members, setMembers] = useState<any[]>([]);
+  const [pendingMembers, setPendingMembers] = useState<any[]>([]);
+  const [pendingBusyId, setPendingBusyId] = useState<string | null>(null);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [userNames, setUserNames] = useState<Record<string, string>>({});
   const [userEmails, setUserEmails] = useState<Record<string, string>>({});
@@ -753,9 +755,19 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
       const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
       setMembers(list);
     });
+    const pendingQ = query(
+      collection(db, "project_members"),
+      where("projectId", "==", projectId),
+      where("role", "==", "pending")
+    );
+    const unsubPending = safeOnSnapshot(pendingQ, (snap) => {
+      const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      setPendingMembers(list);
+    });
     return () => {
       unsubProject();
       unsubMembers();
+      unsubPending();
     };
   }, [projectId]);
 
@@ -772,32 +784,50 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
     }
     return list;
   }, [members, ownerId]);
+  const pendingUsers = useMemo(() => {
+    const seen = new Set<string>();
+    const list: any[] = [];
+    for (const m of pendingMembers) {
+      if (!m?.userId || seen.has(m.userId)) continue;
+      seen.add(m.userId);
+      list.push(m);
+    }
+    return list;
+  }, [pendingMembers]);
+
+  const lookupIds = useMemo(() => {
+    const ids = new Set<string>();
+    uniqueMembers.forEach((m) => m?.userId && ids.add(m.userId));
+    pendingUsers.forEach((m) => m?.userId && ids.add(m.userId));
+    if (ownerId) ids.add(ownerId);
+    return Array.from(ids);
+  }, [uniqueMembers, pendingUsers, ownerId]);
 
   const selectedMember = selectedId ? uniqueMembers.find((m) => m.userId === selectedId) : null;
   const selectedRole = selectedMember
     ? selectedMember.userId === ownerId
-      ? "руководитель"
+      ? "СЂСѓРєРѕРІРѕРґРёС‚РµР»СЊ"
       : selectedMember.role === "admin"
-        ? "менеджер"
-        : "участник"
+        ? "РјРµРЅРµРґР¶РµСЂ"
+        : "СѓС‡Р°СЃС‚РЅРёРє"
     : "";
 
   useEffect(() => {
-    const ids = uniqueMembers.map((m) => m.userId).filter(Boolean);
+    const ids = lookupIds.filter(Boolean);
     if (!ids.length) {
       setUserNames({});
       setUserEmails({});
       setUserAvatars({});
       return;
     }
-    const q = query(collection(db, "users_public"), where("__name__", "in", Array.from(ids).slice(0, 10)));
+    const q = query(collection(db, "users_public"), where("__name__", "in", ids.slice(0, 10)));
     return safeOnSnapshot(q, (snap) => {
       const names: Record<string, string> = {};
       const emails: Record<string, string> = {};
       const avatars: Record<string, string> = {};
       snap.forEach((docSnap) => {
         const data = docSnap.data() as any;
-        names[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
+        names[docSnap.id] = data?.name ?? data?.email ?? "РќРµС‚ РёРјРµРЅРё";
         emails[docSnap.id] = data?.email ?? "";
         const avatar = data?.photoURL ?? data?.avatarUrl ?? data?.avatar ?? null;
         if (avatar) avatars[docSnap.id] = avatar;
@@ -806,7 +836,7 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
       setUserEmails(emails);
       setUserAvatars(avatars);
     });
-  }, [uniqueMembers]);
+  }, [lookupIds]);
 
   async function loadProfile(targetId: string) {
     setProfileLoading(true);
@@ -814,7 +844,7 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
     try {
       const token = await auth.currentUser?.getIdToken();
       if (!token) {
-        setProfileError("Не удалось получить токен");
+        setProfileError("РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ С‚РѕРєРµРЅ");
         return;
       }
       const res = await fetch(
@@ -822,14 +852,14 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) {
-        setProfileError("Не удалось загрузить профиль");
+        setProfileError("РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РїСЂРѕС„РёР»СЊ");
         return;
       }
       const data = await res.json();
       setProfilePhone(data?.profile?.phone ?? "");
       setProfileAddress(data?.profile?.address ?? "");
     } catch {
-      setProfileError("Не удалось загрузить профиль");
+      setProfileError("РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РїСЂРѕС„РёР»СЊ");
     } finally {
       setProfileLoading(false);
     }
@@ -865,7 +895,7 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
     try {
       const token = await auth.currentUser?.getIdToken();
       if (!token) {
-        setProfileError("Не удалось получить токен");
+        setProfileError("РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ С‚РѕРєРµРЅ");
         return;
       }
       const res = await fetch(`/api/user-profiles`, {
@@ -882,13 +912,35 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
         }),
       });
       if (!res.ok) {
-        setProfileError("Не удалось сохранить");
+        setProfileError("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ");
         return;
       }
     } catch {
-      setProfileError("Не удалось сохранить");
+      setProfileError("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ");
     } finally {
       setProfileLoading(false);
+    }
+  }
+  async function approvePending(targetId: string) {
+    if (!targetId) return;
+    setPendingBusyId(targetId);
+    try {
+      await updateDoc(doc(db, "project_members", `${projectId}_${targetId}`), {
+        role: "worker",
+        approvedAt: serverTimestamp(),
+      });
+    } finally {
+      setPendingBusyId(null);
+    }
+  }
+
+  async function rejectPending(targetId: string) {
+    if (!targetId) return;
+    setPendingBusyId(targetId);
+    try {
+      await deleteDoc(doc(db, "project_members", `${projectId}_${targetId}`));
+    } finally {
+      setPendingBusyId(null);
     }
   }
 
@@ -896,20 +948,57 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
     <div className="panel motion p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Люди</h2>
-          <p className="mt-1 text-sm text-muted">Участники и роли в проекте</p>
+          <h2 className="text-lg font-semibold">Р›СЋРґРё</h2>
+          <p className="mt-1 text-sm text-muted">РЈС‡Р°СЃС‚РЅРёРєРё Рё СЂРѕР»Рё РІ РїСЂРѕРµРєС‚Рµ</p>
         </div>
-        <div className="text-sm text-muted">Всего: {uniqueMembers.length}</div>
+        <div className="text-sm text-muted">Р’СЃРµРіРѕ: {uniqueMembers.length}</div>
       </div>
       <div className="mt-4 grid gap-3">
-        {uniqueMembers.length === 0 && <div className="text-sm text-muted">Пока нет участников.</div>}
+        {isManager && pendingMembers.length > 0 && (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center justify-between">
+              <div className="font-semibold">Р—Р°СЏРІРєРё РЅР° СѓС‡Р°СЃС‚РёРµ</div>
+              <div className="text-xs text-muted">{pendingMembers.length}</div>
+            </div>
+            <div className="mt-3 grid gap-2">
+              {pendingMembers.map((m) => {
+                const avatarId = m.userId ?? "";
+                const hasAvatar = userAvatars[avatarId] && !brokenAvatars[avatarId];
+                return (
+                  <div key={m.id ?? avatarId} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      {hasAvatar ? (
+                        <Image src={userAvatars[avatarId]} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover" onError={() => setBrokenAvatars((prev) => ({ ...prev, [avatarId]: true }))} />
+                      ) : (
+                        <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
+                      )}
+                      <div>
+                        <div className="font-semibold">{userNames[avatarId] ?? "РќРµС‚ РёРјРµРЅРё"}</div>
+                        <div className="text-xs text-muted">{userEmails[avatarId] || "РќРµС‚ РґР°РЅРЅС‹С…"}</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button className="btn btn-primary" disabled={pendingBusyId === avatarId} onClick={() => approvePending(avatarId)}>
+                        РџСЂРёРЅСЏС‚СЊ
+                      </button>
+                      <button className="btn btn-outline" disabled={pendingBusyId === avatarId} onClick={() => rejectPending(avatarId)}>
+                        РћС‚РєР»РѕРЅРёС‚СЊ
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {uniqueMembers.length === 0 && <div className="text-sm text-muted">РџРѕРєР° РЅРµС‚ СѓС‡Р°СЃС‚РЅРёРєРѕРІ.</div>}
         {uniqueMembers.map((m) => {
           const role =
             m.userId === ownerId
-              ? "руководитель"
+              ? "СЂСѓРєРѕРІРѕРґРёС‚РµР»СЊ"
               : m.role === "admin"
-                ? "менеджер"
-                : "участник";
+                ? "РјРµРЅРµРґР¶РµСЂ"
+                : "СѓС‡Р°СЃС‚РЅРёРє";
           const avatarId = m.userId ?? "";
           const hasAvatar = userAvatars[avatarId] && !brokenAvatars[avatarId];
           return (
@@ -926,8 +1015,8 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
                   <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
                 )}
                 <div>
-                  <div className="font-semibold">{userNames[avatarId] ?? "Нет имени"}</div>
-                  <div className="text-xs text-muted">{userEmails[avatarId] || "Нет данных"}</div>
+                  <div className="font-semibold">{userNames[avatarId] ?? "РќРµС‚ РёРјРµРЅРё"}</div>
+                  <div className="text-xs text-muted">{userEmails[avatarId] || "РќРµС‚ РґР°РЅРЅС‹С…"}</div>
                 </div>
               </div>
               <div className="text-sm text-muted">{role}</div>
@@ -947,25 +1036,25 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
                   <div className="h-12 w-12 rounded-full bg-[rgba(125,211,167,0.25)]" />
                 )}
                 <div>
-                  <div className="text-lg font-semibold">{userNames[selectedId] ?? "Нет имени"}</div>
-                  <div className="text-sm text-muted">{userEmails[selectedId] || "Нет данных"}</div>
+                  <div className="text-lg font-semibold">{userNames[selectedId] ?? "РќРµС‚ РёРјРµРЅРё"}</div>
+                  <div className="text-sm text-muted">{userEmails[selectedId] || "РќРµС‚ РґР°РЅРЅС‹С…"}</div>
                 </div>
               </div>
-              <button className="btn btn-outline" onClick={() => setProfileOpen(false)}>Закрыть</button>
+              <button className="btn btn-outline" onClick={() => setProfileOpen(false)}>Р—Р°РєСЂС‹С‚СЊ</button>
             </div>
 
             <div className="mt-6 grid gap-4">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <div className="text-xs text-muted">Проект</div>
+                    <div className="text-xs text-muted">РџСЂРѕРµРєС‚</div>
                     <div className="mt-1 text-sm">{projectName || projectId}</div>
-                    <div className="mt-3 text-xs text-muted">Роль</div>
-                    <div className="mt-1 text-sm">{selectedRole || "—"}</div>
+                    <div className="mt-3 text-xs text-muted">Р РѕР»СЊ</div>
+                    <div className="mt-1 text-sm">{selectedRole || "вЂ”"}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-muted">Отработано</div>
-                    <div className="mt-2 text-2xl font-semibold">{hoursValue == null ? "Загрузка..." : `${formatHours(hoursValue)} ч`}</div>
+                    <div className="text-xs text-muted">РћС‚СЂР°Р±РѕС‚Р°РЅРѕ</div>
+                    <div className="mt-2 text-2xl font-semibold">{hoursValue == null ? "Р—Р°РіСЂСѓР·РєР°..." : `${formatHours(hoursValue)} С‡`}</div>
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -976,7 +1065,7 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
                       loadHours(selectedId, "month");
                     }}
                   >
-                    За месяц
+                    Р—Р° РјРµСЃСЏС†
                   </button>
                   <button
                     className={`btn btn-outline ${hoursMode === "all" ? "btn-primary" : ""}`}
@@ -985,28 +1074,28 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
                       loadHours(selectedId, "all");
                     }}
                   >
-                    За всё время
+                    Р—Р° РІСЃС‘ РІСЂРµРјСЏ
                   </button>
                 </div>
               </div>
 
               <div className="grid gap-3">
                 <div>
-                  <label className="text-xs text-muted">Телефон</label>
+                  <label className="text-xs text-muted">РўРµР»РµС„РѕРЅ</label>
                   <input
                     className="input mt-2"
                     value={profilePhone}
                     onChange={(e) => setProfilePhone(e.target.value)}
-                    placeholder="Добавьте номер телефона"
+                    placeholder="Р”РѕР±Р°РІСЊС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted">Адрес</label>
+                  <label className="text-xs text-muted">РђРґСЂРµСЃ</label>
                   <input
                     className="input mt-2"
                     value={profileAddress}
                     onChange={(e) => setProfileAddress(e.target.value)}
-                    placeholder="Добавьте адрес"
+                    placeholder="Р”РѕР±Р°РІСЊС‚Рµ Р°РґСЂРµСЃ"
                   />
                 </div>
               </div>
@@ -1015,10 +1104,10 @@ function PeopleTab({ projectId, projectName }: { projectId: string; projectName:
 
               <div className="flex flex-wrap gap-3">
                 <button className="btn btn-primary" onClick={saveProfile} disabled={profileLoading}>
-                  {profileLoading ? "Сохранение..." : "Сохранить"}
+                  {profileLoading ? "РЎРѕС…СЂР°РЅРµРЅРёРµ..." : "РЎРѕС…СЂР°РЅРёС‚СЊ"}
                 </button>
                 <button className="btn btn-outline" onClick={() => setProfileOpen(false)}>
-                  Закрыть
+                  Р—Р°РєСЂС‹С‚СЊ
                 </button>
               </div>
             </div>
@@ -1054,12 +1143,12 @@ function HoursTab({ projectId, currentUserId }: { projectId: string; currentUser
     <div className="panel motion p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Часы</h2>
-          <p className="mt-1 text-sm text-muted">Текущий месяц: {monthKey || "—"}</p>
+          <h2 className="text-lg font-semibold">Р§Р°СЃС‹</h2>
+          <p className="mt-1 text-sm text-muted">РўРµРєСѓС‰РёР№ РјРµСЃСЏС†: {monthKey || "вЂ”"}</p>
         </div>
       </div>
       <div className="mt-4 grid gap-3">
-        {sorted.length === 0 && <div className="text-sm text-muted">Нет данных по часам.</div>}
+        {sorted.length === 0 && <div className="text-sm text-muted">РќРµС‚ РґР°РЅРЅС‹С… РїРѕ С‡Р°СЃР°Рј.</div>}
         {sorted.map((item) => {
           const minutes = Number(item.totalMinutes ?? 0);
           const isMe = item.userId === currentUserId;
@@ -1069,10 +1158,10 @@ function HoursTab({ projectId, currentUserId }: { projectId: string; currentUser
                 <div className="font-semibold">
                   <UserName userId={item.userId} />
                 </div>
-                <div className="text-xs text-muted">{isMe ? "Это вы" : "Участник проекта"}</div>
+                <div className="text-xs text-muted">{isMe ? "Р­С‚Рѕ РІС‹" : "РЈС‡Р°СЃС‚РЅРёРє РїСЂРѕРµРєС‚Р°"}</div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-semibold">{formatHours(minutes)} ч</div>
+                <div className="text-lg font-semibold">{formatHours(minutes)} С‡</div>
               </div>
             </div>
           );
@@ -1117,20 +1206,20 @@ function ScheduleWorkedMinutes({
   }, [projectId, userId, plannedStart]);
 
   if (minutes <= 0) return null;
-  const label = minutes >= 60 ? `${Math.floor(minutes / 60)} ч ${minutes % 60 ? `${minutes % 60} мин` : ""}` : `${minutes} мин`;
+  const label = minutes >= 60 ? `${Math.floor(minutes / 60)} С‡ ${minutes % 60 ? `${minutes % 60} РјРёРЅ` : ""}` : `${minutes} РјРёРЅ`;
 
-  return <div className="mt-2 text-sm font-semibold text-emerald-300">Отработано: {label}</div>;
+  return <div className="mt-2 text-sm font-semibold text-emerald-300">РћС‚СЂР°Р±РѕС‚Р°РЅРѕ: {label}</div>;
 }
 function ProjectRules() {
   return (
     <div className="panel motion p-6">
-      <h1 className="text-2xl font-semibold">Правила проекта</h1>
-      <p className="mt-2 text-sm text-muted">Перед подключением ознакомьтесь с правилами работы в проекте.</p>
+      <h1 className="text-2xl font-semibold">РџСЂР°РІРёР»Р° РїСЂРѕРµРєС‚Р°</h1>
+      <p className="mt-2 text-sm text-muted">РџРµСЂРµРґ РїРѕРґРєР»СЋС‡РµРЅРёРµРј РѕР·РЅР°РєРѕРјСЊС‚РµСЃСЊ СЃ РїСЂР°РІРёР»Р°РјРё СЂР°Р±РѕС‚С‹ РІ РїСЂРѕРµРєС‚Рµ.</p>
       <div className="mt-4 text-sm">
-        • Своевременно подтверждайте смены<br />
-        • Сообщайте об изменениях заранее<br />
-        • Соблюдайте требования по безопасности<br />
-        • Все вопросы — через руководителя
+        вЂў РЎРІРѕРµРІСЂРµРјРµРЅРЅРѕ РїРѕРґС‚РІРµСЂР¶РґР°Р№С‚Рµ СЃРјРµРЅС‹<br />
+        вЂў РЎРѕРѕР±С‰Р°Р№С‚Рµ РѕР± РёР·РјРµРЅРµРЅРёСЏС… Р·Р°СЂР°РЅРµРµ<br />
+        вЂў РЎРѕР±Р»СЋРґР°Р№С‚Рµ С‚СЂРµР±РѕРІР°РЅРёСЏ РїРѕ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё<br />
+        вЂў Р’СЃРµ РІРѕРїСЂРѕСЃС‹ вЂ” С‡РµСЂРµР· СЂСѓРєРѕРІРѕРґРёС‚РµР»СЏ
       </div>
     </div>
   );
@@ -1161,7 +1250,7 @@ function UserName({ userId }: { userId: string }) {
   }, [userId]);
 
   if (!loaded) return <span />;
-  return <span>{name ?? "Нет имени"}</span>;
+  return <span>{name ?? "РќРµС‚ РёРјРµРЅРё"}</span>;
 }
 
 function formatDate(d: Date) {
