@@ -4,7 +4,8 @@
   updateProfile,
   signOut,
 } from "firebase/auth";
-import { auth } from "./firebase";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { auth, db } from "./firebase";
 import { getOrCreateWebUser } from "./webUser";
 
 function getErrorCode(err: unknown): string | undefined {
@@ -27,6 +28,27 @@ export async function registerUser({
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName: name });
     await getOrCreateWebUser(cred.user.uid, email);
+    await setDoc(
+      doc(db, "users", cred.user.uid),
+      {
+        approved: true,
+        createdAt: serverTimestamp(),
+        email,
+        name,
+        role: "worker",
+      },
+      { merge: true }
+    );
+    await setDoc(
+      doc(db, "users_public", cred.user.uid),
+      {
+        avatarUrl: cred.user.photoURL ?? null,
+        createdAt: serverTimestamp(),
+        email,
+        name,
+      },
+      { merge: true }
+    );
     return null;
   } catch (e: unknown) {
     const code = getErrorCode(e);
