@@ -377,12 +377,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   const nav = useMemo(() => {
+    if (role === "worker") {
+      return [
+        {
+          href: defaultProjectId ? `/app/projects/${defaultProjectId}` : "/role",
+          label: "Мой проект",
+          desc: "Доступ к своему проекту",
+        },
+      ];
+    }
     const items = [...NAV_ITEMS];
     if (role === "admin") {
       items.push({ href: "/app/admin", label: "Admin", desc: "  " });
     }
     return items;
-  }, [role]);
+  }, [role, defaultProjectId]);
 
   const showSettingsNav = pathname.startsWith("/app/settings");
 
