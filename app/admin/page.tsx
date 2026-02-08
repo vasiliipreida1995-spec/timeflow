@@ -232,7 +232,7 @@ export default function AdminPage() {
           </aside>
           <div className="grid gap-6">
           {activeSection === "dashboard" && (
-            <>
+            <div className="grid gap-6">
               <div className="glass card-hover rounded-3xl p-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
@@ -267,6 +267,8 @@ export default function AdminPage() {
               </div>
               {error && (
                 <div className="glass card-hover rounded-3xl p-6 text-sm text-rose-200">{error}</div>
+              </div>
+            </div>
               )}
               <div className="grid gap-4">
                 {loading && <div className="glass card-hover rounded-3xl p-6 text-sm text-muted">Загрузка...</div>}
@@ -308,7 +310,9 @@ export default function AdminPage() {
                       ))}
                     </div>
                   </div>
-            </>
+            </div>
+              </div>
+            </div>
           )}
           {activeSection === "users" && (
             <div className="grid gap-4">
