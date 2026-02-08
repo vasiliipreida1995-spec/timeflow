@@ -388,6 +388,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <a className="btn btn-primary" href="/pricing">Смотреть тарифы</a>
                 <a className="btn btn-outline" href="mailto:support@timeflow.app">Связаться с поддержкой</a>
+                <button className="btn btn-outline" type="button" onClick={() => logoutUser()}>Сменить аккаунт</button>
               </div>
               {subLoading && <p className="mt-4 text-xs text-muted">Проверяем подписку...</p>}
               {subPlan && <p className="mt-2 text-xs text-muted">Текущий план: {subPlan}</p>}
