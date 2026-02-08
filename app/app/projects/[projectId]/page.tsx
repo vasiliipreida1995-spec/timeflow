@@ -169,6 +169,13 @@ export default function ProjectPage() {
                 <p className="mt-4 text-sm text-muted">
                   Мы уведомим вас после принятия решения. Эта форма закроется автоматически после одобрения.
                 </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <button className="btn btn-outline" onClick={() => router.replace("/")}>Вернусь позже</button>
+                  <button className="btn btn-outline" onClick={async () => {
+                    await auth.signOut();
+                    router.replace("/login");
+                  }}>Выйти из аккаунта</button>
+                </div>
               </>
             )}
             {rejected && (
