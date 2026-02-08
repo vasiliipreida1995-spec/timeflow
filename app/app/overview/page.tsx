@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 // @ts-nocheck
 "use client";
 
@@ -132,7 +132,7 @@ function ProjectSelect({ value, projects, onChange }: ProjectSelectProps) {
   }, []);
 
   const selected = projects.find((p: any) => p.id === value);
-  const label = value ? (selected?.name ?? value) : "Все проекты";
+  const label = value ? (selected?.name ?? value) : "Р’СЃРµ РїСЂРѕРµРєС‚С‹";
 
   return (
     <div className="relative" ref={wrapperRef}>
@@ -151,7 +151,7 @@ function ProjectSelect({ value, projects, onChange }: ProjectSelectProps) {
               setOpen(false);
             }}
           >
-            Все проекты
+            Р’СЃРµ РїСЂРѕРµРєС‚С‹
           </button>
           <div className="mt-2 max-h-[260px] overflow-y-auto pr-1">
             {projects.map((p: any) => (
@@ -170,7 +170,7 @@ function ProjectSelect({ value, projects, onChange }: ProjectSelectProps) {
               </button>
             ))}
             {projects.length === 0 && (
-              <div className="rounded-[12px] px-3 py-2 text-sm text-muted">Нет проектов</div>
+              <div className="rounded-[12px] px-3 py-2 text-sm text-muted">РќРµС‚ РїСЂРѕРµРєС‚РѕРІ</div>
             )}
           </div>
         </div>
@@ -180,8 +180,8 @@ function ProjectSelect({ value, projects, onChange }: ProjectSelectProps) {
 }
 
 function UserLabel({ userId, userNames }: { userId?: string | null; userNames: Record<string, string> }) {
-  if (!userId) return <span>Пользователь</span>;
-  return <span>{userNames[userId] ?? "Нет имени"}</span>;
+  if (!userId) return <span>РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ</span>;
+  return <span>{userNames[userId] ?? "РќРµС‚ РёРјРµРЅРё"}</span>;
 }
 
 export default function OverviewPage() {
@@ -325,7 +325,7 @@ export default function OverviewPage() {
       const nextChat = isChatValid ? chatProjectId : isSavedChatValid ? savedChat : list[0].id;
       if (nextChat && nextChat !== chatProjectId) setChatProjectId(nextChat);
     });
-  }, [userId, authReady, selectedProjectId, chatProjectId]);
+  }, [userId, authReady]);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -675,7 +675,7 @@ export default function OverviewPage() {
       const avatars: Record<string, string> = {};
       snap.forEach((docSnap: any) => {
         const data = docSnap.data() as any;
-        map[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
+        map[docSnap.id] = data?.name ?? data?.email ?? "РќРµС‚ РёРјРµРЅРё";
         const avatar = data?.photoURL ?? data?.avatarUrl ?? data?.avatar ?? null;
         if (avatar) avatars[docSnap.id] = avatar;
       });
@@ -732,7 +732,7 @@ export default function OverviewPage() {
           const map: Record<string, string> = {};
           snap.forEach((docSnap: any) => {
             const data = docSnap.data() as any;
-            map[docSnap.id] = data?.name ?? data?.email ?? "Нет имени";
+            map[docSnap.id] = data?.name ?? data?.email ?? "РќРµС‚ РёРјРµРЅРё";
           });
           setUserNames(map);
         }
@@ -878,9 +878,9 @@ export default function OverviewPage() {
   const deltaTone = deltaPercent != null && deltaPercent < 0 ? "down" : "up";
 
   const cards = [
-    { label: "Часы за месяц", value: monthHoursDisplay, note: selectedProjectId ? "по проекту" : "по всем проектам" },
-    { label: "Активные проекты", value: activeDisplay, note: selectedProjectId ? "выбранный проект" : "текущий аккаунт" },
-    { label: "Людей на проектах", value: peopleDisplay, note: selectedProjectId ? "в проекте" : "ваши проекты" },
+    { label: "Р§Р°СЃС‹ Р·Р° РјРµСЃСЏС†", value: monthHoursDisplay, note: selectedProjectId ? "РїРѕ РїСЂРѕРµРєС‚Сѓ" : "РїРѕ РІСЃРµРј РїСЂРѕРµРєС‚Р°Рј" },
+    { label: "РђРєС‚РёРІРЅС‹Рµ РїСЂРѕРµРєС‚С‹", value: activeDisplay, note: selectedProjectId ? "РІС‹Р±СЂР°РЅРЅС‹Р№ РїСЂРѕРµРєС‚" : "С‚РµРєСѓС‰РёР№ Р°РєРєР°СѓРЅС‚" },
+    { label: "Р›СЋРґРµР№ РЅР° РїСЂРѕРµРєС‚Р°С…", value: peopleDisplay, note: selectedProjectId ? "РІ РїСЂРѕРµРєС‚Рµ" : "РІР°С€Рё РїСЂРѕРµРєС‚С‹" },
   ];
 
   const chatSelectedProject = projects.find((p: any) => p.id === chatProjectId);
@@ -889,9 +889,9 @@ export default function OverviewPage() {
       <div className="panel motion p-6 min-h-[320px] max-h-[560px] overflow-hidden">
         <div className="panel-header">
           <div>
-            <h2 className="text-lg font-semibold">Командный чат проекта</h2>
+            <h2 className="text-lg font-semibold">РљРѕРјР°РЅРґРЅС‹Р№ С‡Р°С‚ РїСЂРѕРµРєС‚Р°</h2>
             <p className="text-sm text-muted">
-              Руководители и менеджеры {chatSelectedProject ? `проекта «${chatSelectedProject.name ?? chatSelectedProject.id}»` : "всех проектов"}.
+              Р СѓРєРѕРІРѕРґРёС‚РµР»Рё Рё РјРµРЅРµРґР¶РµСЂС‹ {chatSelectedProject ? `РїСЂРѕРµРєС‚Р° В«${chatSelectedProject.name ?? chatSelectedProject.id}В»` : "РІСЃРµС… РїСЂРѕРµРєС‚РѕРІ"}.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -918,24 +918,24 @@ export default function OverviewPage() {
           >
             {!chatProjectId && (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
-                Выберите проект, чтобы открыть командный чат.
+                Р’С‹Р±РµСЂРёС‚Рµ РїСЂРѕРµРєС‚, С‡С‚РѕР±С‹ РѕС‚РєСЂС‹С‚СЊ РєРѕРјР°РЅРґРЅС‹Р№ С‡Р°С‚.
               </div>
             )}
             {chatProjectId && !isChatLeader && (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
-                Чат доступен только руководителям проекта.
+                Р§Р°С‚ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ СЂСѓРєРѕРІРѕРґРёС‚РµР»СЏРј РїСЂРѕРµРєС‚Р°.
               </div>
             )}
             {chatProjectId && isChatLeader && pinnedMessages.length > 0 && (
               <div className="chat-pinned">
-                <div className="text-xs text-muted">Закреплённые</div>
+                <div className="text-xs text-muted">Р—Р°РєСЂРµРїР»С‘РЅРЅС‹Рµ</div>
                 <div className="mt-2 grid gap-2">
                   {pinnedMessages.map((msg, index) => (
                     <div key={`${msg.id ?? msg.tempId ?? index}`} className="chat-pinned-item">
                       <div className="flex items-center justify-between text-xs text-muted">
                         <UserLabel userId={msg.senderId} userNames={chatUserNames} />
                         <button type="button" onClick={() => togglePin(msg.id)} className="chat-pin-action">
-                          Открепить
+                          РћС‚РєСЂРµРїРёС‚СЊ
                         </button>
                       </div>
                       <div className="mt-1 text-sm text-white/90">{msg.text ?? ""}</div>
@@ -946,7 +946,7 @@ export default function OverviewPage() {
             )}
             {chatProjectId && isChatLeader && regularMessages.length === 0 && pinnedMessages.length === 0 && (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted">
-                Пока нет сообщений. Начните обсуждение с командой.
+                РџРѕРєР° РЅРµС‚ СЃРѕРѕР±С‰РµРЅРёР№. РќР°С‡РЅРёС‚Рµ РѕР±СЃСѓР¶РґРµРЅРёРµ СЃ РєРѕРјР°РЅРґРѕР№.
               </div>
             )}
             {chatProjectId && isChatLeader && regularMessages.length > 0 && (
@@ -979,21 +979,21 @@ export default function OverviewPage() {
                           <span>{formatClock(created)}</span>
                           {msg.priority && msg.priority !== "normal" && (
                             <span className={`badge chip ${msg.priority === "urgent" ? "bg-rose-400/20 text-rose-200" : "bg-amber-400/20 text-amber-200"}`}>
-                              {msg.priority === "urgent" ? "Срочно" : "Важно"}
+                              {msg.priority === "urgent" ? "РЎСЂРѕС‡РЅРѕ" : "Р’Р°Р¶РЅРѕ"}
                             </span>
                           )}
                         </div>
                         <div className="chat-text">{msg.text ?? ""}</div>
                         {msg.attachmentUrl && (
                           <a className="chat-attachment" href={msg.attachmentUrl} target="_blank" rel="noreferrer">
-                            {msg.attachmentName ?? "Вложение"}
+                            {msg.attachmentName ?? "Р’Р»РѕР¶РµРЅРёРµ"}
                           </a>
                         )}
                         {isMine && (readCounts[msg.id] ?? 0) > 0 && (
-                          <div className="mt-1 text-[11px] text-white/45">Прочитано {readCounts[msg.id]}</div>
+                          <div className="mt-1 text-[11px] text-white/45">РџСЂРѕС‡РёС‚Р°РЅРѕ {readCounts[msg.id]}</div>
                         )}
                         <div className="chat-reactions">
-                          {["👍", "🔥", "✅"].map((emoji: any) => {
+                          {["рџ‘Ќ", "рџ”Ґ", "вњ…"].map((emoji: any) => {
                             const item = reactions.find((r: any) => r.emoji === emoji);
                             return (
                               <button key={emoji} type="button" onClick={() => toggleReaction(msg.id, emoji)} className={`chat-reaction ${item?.mine ? "is-active" : ""}`}>
@@ -1002,7 +1002,7 @@ export default function OverviewPage() {
                             );
                           })}
                           <button type="button" onClick={() => togglePin(msg.id)} className={`chat-pin ${pinnedIds.includes(msg.id) ? "is-active" : ""}`}>
-                            {pinnedIds.includes(msg.id) ? "Открепить" : "Закрепить"}
+                            {pinnedIds.includes(msg.id) ? "РћС‚РєСЂРµРїРёС‚СЊ" : "Р—Р°РєСЂРµРїРёС‚СЊ"}
                           </button>
                         </div>
                       </div>
@@ -1014,17 +1014,17 @@ export default function OverviewPage() {
           </div>
           <div className="flex flex-col gap-3">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-muted">
-              Обсуждайте важные изменения, чтобы команда видела общий контекст.
+              РћР±СЃСѓР¶РґР°Р№С‚Рµ РІР°Р¶РЅС‹Рµ РёР·РјРµРЅРµРЅРёСЏ, С‡С‚РѕР±С‹ РєРѕРјР°РЅРґР° РІРёРґРµР»Р° РѕР±С‰РёР№ РєРѕРЅС‚РµРєСЃС‚.
             </div>
             {typingUsers.length > 0 && (
-              <div className="chat-typing">Печатает: {typingUsers.map((id: any) => chatUserNames[id] ?? "Пользователь").join(", ")}</div>
+              <div className="chat-typing">РџРµС‡Р°С‚Р°РµС‚: {typingUsers.map((id: any) => chatUserNames[id] ?? "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ").join(", ")}</div>
             )}
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <label className="text-xs text-muted">Сообщение</label>
+              <label className="text-xs text-muted">РЎРѕРѕР±С‰РµРЅРёРµ</label>
               <textarea
                 className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/90"
                 rows={4}
-                placeholder={isChatLeader ? "Напишите короткое обновление для команды" : "Доступ только для руководителей"}
+                placeholder={isChatLeader ? "РќР°РїРёС€РёС‚Рµ РєРѕСЂРѕС‚РєРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ РґР»СЏ РєРѕРјР°РЅРґС‹" : "Р”РѕСЃС‚СѓРї С‚РѕР»СЊРєРѕ РґР»СЏ СЂСѓРєРѕРІРѕРґРёС‚РµР»РµР№"}
                 value={chatText}
                 onChange={(e: any) => setChatText(e.target.value)}
                 disabled={!chatProjectId || !isChatLeader}
@@ -1036,9 +1036,9 @@ export default function OverviewPage() {
                   onChange={(e: any) => setChatPriority(e.target.value as any)}
                   disabled={!chatProjectId || !isChatLeader}
                 >
-                  <option value="normal">Обычное</option>
-                  <option value="important">Важно</option>
-                  <option value="urgent">Срочно</option>
+                  <option value="normal">РћР±С‹С‡РЅРѕРµ</option>
+                  <option value="important">Р’Р°Р¶РЅРѕ</option>
+                  <option value="urgent">РЎСЂРѕС‡РЅРѕ</option>
                 </select>
                 <button
                   type="button"
@@ -1046,7 +1046,7 @@ export default function OverviewPage() {
                   onClick={() => setShowAttachment((v: any) => !v)}
                   disabled={!chatProjectId || !isChatLeader}
                 >
-                  Вложение
+                  Р’Р»РѕР¶РµРЅРёРµ
                 </button>
                 <button
                   className="btn btn-primary"
@@ -1054,20 +1054,20 @@ export default function OverviewPage() {
                   onClick={sendChatMessage}
                   disabled={!chatProjectId || !isChatLeader || !chatText.trim()}
                 >
-                  Отправить
+                  РћС‚РїСЂР°РІРёС‚СЊ
                 </button>
               </div>
               {showAttachment && (
                 <div className="mt-3 grid gap-2">
                   <input
                     className="input"
-                    placeholder="Ссылка на файл"
+                    placeholder="РЎСЃС‹Р»РєР° РЅР° С„Р°Р№Р»"
                     value={chatAttachmentUrl}
                     onChange={(e: any) => setChatAttachmentUrl(e.target.value)}
                   />
                   <input
                     className="input"
-                    placeholder="Название (необязательно)"
+                    placeholder="РќР°Р·РІР°РЅРёРµ (РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ)"
                     value={chatAttachmentName}
                     onChange={(e: any) => setChatAttachmentName(e.target.value)}
                   />
@@ -1082,12 +1082,12 @@ export default function OverviewPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold">Control Room</h1>
-            <p className="mt-2 text-sm text-muted">Сводка по ключевым метрикам и людям на проектах.</p>
+            <p className="mt-2 text-sm text-muted">РЎРІРѕРґРєР° РїРѕ РєР»СЋС‡РµРІС‹Рј РјРµС‚СЂРёРєР°Рј Рё Р»СЋРґСЏРј РЅР° РїСЂРѕРµРєС‚Р°С….</p>
           </div>
           <div className="flex flex-col items-start gap-3">
             <ProjectSelect value={selectedProjectId} projects={projects} onChange={setSelectedProjectId} />
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-muted">
-              {selectedProjectId ? "Фильтр по проекту" : "Все проекты руководителя"}
+              {selectedProjectId ? "Р¤РёР»СЊС‚СЂ РїРѕ РїСЂРѕРµРєС‚Сѓ" : "Р’СЃРµ РїСЂРѕРµРєС‚С‹ СЂСѓРєРѕРІРѕРґРёС‚РµР»СЏ"}
             </div>
           </div>
         </div>
@@ -1107,8 +1107,8 @@ export default function OverviewPage() {
         <div className="panel motion p-6">
           <div className="panel-header">
             <div>
-              <h2 className="text-lg font-semibold">Месяц к месяцу</h2>
-              <p className="text-sm text-muted">Сравнение часов за {labelFromMonthKey(prevMonthKey)} и {labelFromMonthKey(monthKey)}.</p>
+              <h2 className="text-lg font-semibold">РњРµСЃСЏС† Рє РјРµСЃСЏС†Сѓ</h2>
+              <p className="text-sm text-muted">РЎСЂР°РІРЅРµРЅРёРµ С‡Р°СЃРѕРІ Р·Р° {labelFromMonthKey(prevMonthKey)} Рё {labelFromMonthKey(monthKey)}.</p>
             </div>
             <div className={`badge chip ${deltaTone === "down" ? "bg-rose-400/15 text-rose-200" : "bg-emerald-400/15 text-emerald-200"}`}>{deltaLabel}</div>
           </div>
@@ -1116,7 +1116,7 @@ export default function OverviewPage() {
             <div>
               <div className="flex items-center justify-between text-xs text-muted">
                 <span>{labelFromMonthKey(prevMonthKey)}</span>
-                <span>{formatHoursValue(prevMinutes / 60)} ч</span>
+                <span>{formatHoursValue(prevMinutes / 60)} С‡</span>
               </div>
               <div className="mt-2 h-2 rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-white/40" style={{ width: `${prevBar}%` }} />
@@ -1125,7 +1125,7 @@ export default function OverviewPage() {
             <div>
               <div className="flex items-center justify-between text-xs text-muted">
                 <span>{labelFromMonthKey(monthKey)}</span>
-                <span>{formatHoursValue(currentMinutes / 60)} ч</span>
+                <span>{formatHoursValue(currentMinutes / 60)} С‡</span>
               </div>
               <div className="mt-2 h-2 rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-[rgba(125,211,167,0.8)]" style={{ width: `${currentBar}%` }} />
@@ -1137,8 +1137,8 @@ export default function OverviewPage() {
         <div className="panel motion p-6">
           <div className="panel-header">
             <div>
-              <h2 className="text-lg font-semibold">Важное за 24 часа</h2>
-              <p className="text-sm text-muted">Не подтверждают смены более суток.</p>
+              <h2 className="text-lg font-semibold">Р’Р°Р¶РЅРѕРµ Р·Р° 24 С‡Р°СЃР°</h2>
+              <p className="text-sm text-muted">РќРµ РїРѕРґС‚РІРµСЂР¶РґР°СЋС‚ СЃРјРµРЅС‹ Р±РѕР»РµРµ СЃСѓС‚РѕРє.</p>
             </div>
             <span className="badge chip">{overdue.length}</span>
           </div>
@@ -1154,24 +1154,24 @@ export default function OverviewPage() {
                     <div className="font-semibold">
                       <UserLabel userId={item.userId} userNames={userNames} />
                     </div>
-                    <div className="text-xs text-muted">{hours != null ? `${hours} ч` : "-"}</div>
+                    <div className="text-xs text-muted">{hours != null ? `${hours} С‡` : "-"}</div>
                   </div>
-                  <div className="mt-1 text-xs text-muted">Проект: {projectName}</div>
+                  <div className="mt-1 text-xs text-muted">РџСЂРѕРµРєС‚: {projectName}</div>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-xs text-muted">Шаблон: напоминание о подтверждении смены</span>
+                    <span className="text-xs text-muted">РЁР°Р±Р»РѕРЅ: РЅР°РїРѕРјРёРЅР°РЅРёРµ Рѕ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРё СЃРјРµРЅС‹</span>
                     <button
                       type="button"
                       className={`btn btn-outline ${remindedAlready ? "opacity-60" : ""}`}
                       onClick={() => setReminded((prev: any) => ({ ...prev, [item.id]: true }))}
                     >
-                      {remindedAlready ? "Запланировано" : "Напомнить"}
+                      {remindedAlready ? "Р—Р°РїР»Р°РЅРёСЂРѕРІР°РЅРѕ" : "РќР°РїРѕРјРЅРёС‚СЊ"}
                     </button>
                   </div>
                 </div>
               );
             })}
             {overdue.length === 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-muted">Нет просроченных подтверждений.</div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-muted">РќРµС‚ РїСЂРѕСЃСЂРѕС‡РµРЅРЅС‹С… РїРѕРґС‚РІРµСЂР¶РґРµРЅРёР№.</div>
             )}
           </div>
         </div>
