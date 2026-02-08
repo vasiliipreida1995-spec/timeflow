@@ -386,7 +386,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const showSettingsNav = pathname.startsWith("/app/settings");
 
-  if (subActive === false) {
+  if (subActive === false && role !== "worker") {
     return (
       <AuthGate>
         <div className="relative min-h-screen overflow-hidden">
