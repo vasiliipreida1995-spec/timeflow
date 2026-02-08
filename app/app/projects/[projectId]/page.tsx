@@ -3,7 +3,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   addDoc,
@@ -24,8 +24,10 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../../../lib/firebase";
 import { safeOnSnapshot } from "../../../../lib/firestoreSafe";
+import { updateWebUser } from "../../../../lib/webUser";
 export default function ProjectPage() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params?.projectId as string | undefined;
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -34,6 +36,8 @@ export default function ProjectPage() {
   const [isManager, setIsManager] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [wasPending, setWasPending] = useState(false);
+  const [rejected, setRejected] = useState(false);
   const [showRules, setShowRules] = useState(false);
 
   const [tab, setTab] = useState<"chat" | "pinned" | "schedule" | "people" | "hours">("chat");
@@ -43,6 +47,22 @@ export default function ProjectPage() {
       setUserId(user?.uid ?? null);
     });
   }, []);
+
+  useEffect(() => {
+    if (isPending) setWasPending(true);
+  }, [isPending]);
+
+  useEffect(() => {
+    if (!userId) return;
+    if (wasPending && !isPending && !isMember) {
+      setRejected(true);
+      updateWebUser(userId, { defaultProjectId: null }).catch(() => {});
+      const timer = window.setTimeout(() => {
+        router.replace("/role");
+      }, 2500);
+      return () => window.clearTimeout(timer);
+    }
+  }, [wasPending, isPending, isMember, userId, router]);
 
   useEffect(() => {
     if (!projectId) return;
