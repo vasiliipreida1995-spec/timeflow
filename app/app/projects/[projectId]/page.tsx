@@ -964,6 +964,8 @@ function PeopleTab({ projectId, projectName, isManager }: { projectId: string; p
               {pendingMembers.map((m) => {
                 const avatarId = m.userId ?? "";
                 const hasAvatar = userAvatars[avatarId] && !brokenAvatars[avatarId];
+                const displayName = userNames[avatarId] ?? userEmails[avatarId] ?? (avatarId ? `ID ${avatarId.slice(0, 8)}` : "Нет имени");
+                const displayEmail = userEmails[avatarId] || (avatarId ? `ID: ${avatarId}` : "Нет данных");
                 return (
                   <div key={m.id ?? avatarId} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -973,8 +975,8 @@ function PeopleTab({ projectId, projectName, isManager }: { projectId: string; p
                         <div className="h-9 w-9 rounded-full bg-[rgba(125,211,167,0.25)]" />
                       )}
                       <div>
-                        <div className="font-semibold">{userNames[avatarId] ?? "Нет имени"}</div>
-                        <div className="text-xs text-muted">{userEmails[avatarId] || "Нет данных"}</div>
+                        <div className="font-semibold">{displayName}</div>
+                        <div className="text-xs text-muted">{displayEmail}</div>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
