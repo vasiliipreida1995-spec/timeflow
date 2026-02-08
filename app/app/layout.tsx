@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { onAuthStateChanged } from "firebase/auth";
+import { setPersistence, browserLocalPersistence, onAuthStateChanged } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AuthGate from "../../components/AuthGate";
@@ -82,6 +82,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
   }, []);
   useEffect(() => {
+    setPersistence(auth, browserLocalPersistence).catch(() => {});
+  }, []);
+  useEffect(() => {
     if (!email) return;
     let active = true;
     const load = async () => {
@@ -107,6 +110,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       active = false;
     };
   }, [email]);
+  useEffect(() => {
+    const idleMs = 60 * 60 * 1000;
+    let lastActive = Date.now();
+    const touch = () => { lastActive = Date.now(); };
+    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
+    events.forEach((e) => window.addEventListener(e, touch, { passive: true }));
+    const timer = window.setInterval(() => {
+      if (Date.now() - lastActive >= idleMs) {
+        logoutUser();
+        window.location.href = "/login";
+      }
+    }, 60 * 1000);
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, touch));
+      window.clearInterval(timer);
+    };
+  }, []);
   const monthKey = useMemo(() => {
     const d = new Date();
     const m = (d.getMonth() + 1).toString().padStart(2, "0");

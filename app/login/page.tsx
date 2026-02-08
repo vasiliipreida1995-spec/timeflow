@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { loginUser } from "../../lib/userAccess";
 import { auth } from "../../lib/firebase";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +13,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) router.replace("/app");
+    });
+    return () => unsub();
+  }, [router]);
 
   async function handleLogin() {
     setLoading(true);
