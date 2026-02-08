@@ -168,8 +168,10 @@ export default function RolePage() {
       },
       { merge: true }
     );
+    await updateWebUser(uid, { role: "worker", defaultProjectId: requestProjectId });
     setRequesting(false);
     setRequestProjectId("");
+    router.replace(`/app/projects/${requestProjectId}`);
   }
 
   async function cancelRequest(projectId: string) {

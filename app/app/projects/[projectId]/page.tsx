@@ -126,7 +126,7 @@ export default function ProjectPage() {
     return <ProjectRules />;
   }
 
-  if (!isMember) {
+  if (!isMember && !isPending && !rejected) {
     return (
       <JoinProject
         projectId={projectId}
@@ -134,6 +134,38 @@ export default function ProjectPage() {
         isPending={isPending}
         onApply={() => setShowRules(true)}
       />
+    );
+  }
+
+  if (!isMember && (isPending || rejected)) {
+    return (
+      <div className="relative min-h-[60vh]">
+        <div className="fixed inset-0 z-[70] grid place-items-center bg-black/60 p-4">
+          <div className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-[#0f1216] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.55)]">
+            {!rejected && (
+              <>
+                <p className="text-xs uppercase tracking-[0.24em] text-muted">Заявка отправлена</p>
+                <h3 className="mt-2 text-xl font-semibold">Ожидайте одобрения администрации</h3>
+                <p className="mt-4 text-sm text-muted">
+                  Мы уведомим вас после принятия решения. Эта форма закроется автоматически после одобрения.
+                </p>
+              </>
+            )}
+            {rejected && (
+              <>
+                <p className="text-xs uppercase tracking-[0.24em] text-rose-200">Отказано</p>
+                <h3 className="mt-2 text-xl font-semibold">Вам отказали в доступе</h3>
+                <p className="mt-4 text-sm text-muted">
+                  Выберите другой проект для заявки или свяжитесь с менеджером.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <button className="btn btn-primary" onClick={() => router.replace("/role")}>Выбрать другой проект</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     );
   }
 
