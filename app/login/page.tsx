@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { loginUser } from "../../lib/userAccess";
-import { auth } from "../../lib/firebase";
+import { auth, db } from "../../lib/firebase";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 export default function LoginPage() {
@@ -37,7 +38,29 @@ export default function LoginPage() {
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          approved: true,
+          createdAt: serverTimestamp(),
+          email: user.email ?? null,
+          name: user.displayName ?? user.email ?? "Пользователь",
+          role: "worker",
+        },
+        { merge: true }
+      );
+      await setDoc(
+        doc(db, "users_public", user.uid),
+        {
+          avatarUrl: user.photoURL ?? null,
+          createdAt: serverTimestamp(),
+          email: user.email ?? null,
+          name: user.displayName ?? user.email ?? "Пользователь",
+        },
+        { merge: true }
+      );
       router.replace("/app");
     } catch {
       setError("Ошибка входа через Google");
