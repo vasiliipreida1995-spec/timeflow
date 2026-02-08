@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
@@ -55,9 +55,9 @@ export default function RolePage() {
           </button>
 
           <button className="panel p-5 text-left card-hover" onClick={() => setRole("admin")}>
-            <p className="text-sm uppercase tracking-[0.25em] text-muted">Administrator</p>
-            <h2 className="mt-3 text-lg font-semibold">Администратор</h2>
-            <p className="mt-2 text-sm text-muted">Полный доступ к настройкам и команде.</p>
+            <p className="text-sm uppercase tracking-[0.25em] text-muted">Worker</p>
+            <h2 className="mt-3 text-lg font-semibold">Работник</h2>
+            <p className="mt-2 text-sm text-muted">Доступ к задачам и отметкам времени.</p>
           </button>
         </div>
 
