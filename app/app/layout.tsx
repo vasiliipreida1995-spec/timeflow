@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { setPersistence, browserLocalPersistence, onAuthStateChanged } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -42,7 +42,9 @@ const SETTINGS_NAV = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
+  const [defaultProjectId, setDefaultProjectId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -74,6 +76,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       setEmail(user.email ?? null);
       unsub = subscribeWebUser(user.uid, (u) => {
         setRole(u?.role ?? null);
+        setDefaultProjectId(u?.defaultProjectId ?? null);
       });
     });
     return () => {
@@ -132,6 +135,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const m = (d.getMonth() + 1).toString().padStart(2, "0");
     return `${d.getFullYear()}-${m}`;
   }, []);
+  const isWorker = role === "worker";
+  const isWorkerProjectPage = pathname.startsWith("/app/projects/") && pathname.split("/").length >= 4;
+  const isWorkerLanding = pathname === "/app" || pathname === "/app/overview" || pathname === "/app/projects";
+
+  useEffect(() => {
+    if (!isWorker) return;
+    if (!defaultProjectId) {
+      if (pathname !== "/role") router.replace("/role");
+      return;
+    }
+    if (isWorkerLanding) {
+      router.replace(`/app/projects/${defaultProjectId}`);
+    }
+  }, [isWorker, defaultProjectId, pathname, router]);
 
   const projectIdFromPath = useMemo(() => {
     const parts = pathname.split("/");
@@ -421,7 +438,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted">
                   <span className="chip">Web-first OS</span>
-                  {role && <span className="chip">{role === "admin" ? "Администратор" : "Менеджер"}</span>}
+                  {role && <span className="chip">{role === "admin" ? "Администратор" : role === "worker" ? "Работник" : "Менеджер"}</span>}
                   {email && <span className="chip">{email}</span>}
                 </div>
               </div>
@@ -521,7 +538,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </aside>
 
             <main className="flex min-h-[70vh] flex-1 flex-col gap-6">
-              {children}
+              {isWorker && !isWorkerProjectPage ? (
+                <div className="panel motion p-6">
+                  <h2 className="text-xl font-semibold">Доступ запрещен</h2>
+                  <p className="mt-2 text-sm text-muted">Эта вкладка доступна менеджерам. Работник может просматривать только свой проект.</p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {defaultProjectId && (
+                      <button className="btn btn-primary" onClick={() => router.replace(`/app/projects/${defaultProjectId}`)}>
+                        Открыть мой проект
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                children
+              )}
             </main>
           </div>
         </div>
@@ -626,3 +657,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </AuthGate>
   );
 }
+
+

@@ -12,12 +12,13 @@
 } from "firebase/firestore";
 import { db } from "./firebase";
 
-export type WebRole = "admin" | "manager";
+export type WebRole = "admin" | "manager" | "worker";
 
 export type WebUser = {
   role?: WebRole | null;
   approved?: boolean;
   email?: string | null;
+  defaultProjectId?: string | null;
   createdAt?: unknown;
 };
 
@@ -81,3 +82,6 @@ export async function listInvites(): Promise<(WebInvite & { id: string })[]> {
 export async function deleteInvite(id: string) {
   await deleteDoc(doc(db, "web_invites", id));
 }
+
+
+
