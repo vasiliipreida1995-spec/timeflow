@@ -1050,7 +1050,7 @@ export default function ReportsPage() {
   }
   /* Details Page */
   .page--details {
-    padding: 48px;
+    padding: 40px 48px 32px;
     background: #fafafa;
   }
 
@@ -1059,7 +1059,7 @@ export default function ReportsPage() {
     font-weight: 800;
     color: #0a0a0a;
     letter-spacing: -0.02em;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .details-meta {
@@ -1070,11 +1070,11 @@ export default function ReportsPage() {
   }
 
   .details-gap {
-    height: 32px;
+    height: 24px;
   }
 
   .details-spacer {
-    height: 64px;
+    height: 24px;
   }
 
   .details-empty {
@@ -1088,7 +1088,7 @@ export default function ReportsPage() {
   }
 
   .details-person {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
 
   .details-person__name {
@@ -1101,21 +1101,21 @@ export default function ReportsPage() {
 
   /* Signature Section */
   .sign-row {
-    margin-top: 48px;
+    margin-top: 32px;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    padding: 32px;
+    padding: 24px 28px;
     background: #ffffff;
     border-radius: 16px;
     border: 1px solid #e5e5e5;
   }
 
   .sign-name {
-    margin-top: 40px;
+    margin-top: 32px;
     font-weight: 700;
     color: #0a0a0a;
-    padding-top: 12px;
+    padding-top: 10px;
     border-top: 2px solid #0a0a0a;
   }
 
