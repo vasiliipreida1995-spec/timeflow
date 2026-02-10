@@ -13,6 +13,7 @@ import { auth, db } from "../../../lib/firebase";
 import { escapeHtml } from "../../../lib/escapeHtml";
 
 import { safeOnSnapshot } from "../../../lib/firestoreSafe";
+import PieChart from "../../../components/PieChart";
 
 
 
@@ -157,6 +158,8 @@ export default function ReportsPage() {
 
   const [companyName, setCompanyName] = useState("Timeflow Ops");
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [prevMonthMinutes, setPrevMonthMinutes] = useState<number>(0);
 
 
 
@@ -229,6 +232,7 @@ export default function ReportsPage() {
 
 
   useEffect(() => {
+    setIsLoading(true);
 
     if (!projects.length) {
 
@@ -240,6 +244,7 @@ export default function ReportsPage() {
       setTimeout(() => setProjectDayMinutes({}), 0);
       setTimeout(() => setProjectUserDayMinutes({}), 0);
       setTimeout(() => setUserDayMinutesTotals({}), 0);
+      setIsLoading(false);
 
       return;
 
@@ -365,6 +370,7 @@ export default function ReportsPage() {
       setProjectDayMinutes(perProjectDays);
       setProjectUserDayMinutes(perProjectUserDays);
       setUserDayMinutesTotals(perUserDayTotals);
+      setIsLoading(false);
 
     };
 
@@ -447,7 +453,42 @@ export default function ReportsPage() {
 
   }, [projects, monthKey]);
 
+  useEffect(() => {
+    if (!projects.length || !monthKey) {
+      setPrevMonthMinutes(0);
+      return;
+    }
 
+    const parts = monthKey.split("-");
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    const prevDate = new Date(year, month - 2, 1);
+    const prevKey = monthKeyFromDate(prevDate);
+
+    const unsubs = projects.map((project) => {
+      const q = query(
+        collectionGroup(db, "months"),
+        where("projectId", "==", project.id),
+        where("month", "==", prevKey)
+      );
+
+      return safeOnSnapshot(q, (snap) => {
+        if (!("forEach" in snap)) return;
+        let total = 0;
+        snap.forEach((docSnap: QueryDocumentSnapshot<DocumentData>) => {
+          const data = docSnap.data() as MonthDoc;
+          const mins = Number(data?.totalMinutes ?? 0);
+          if (!Number.isNaN(mins)) total += mins;
+        });
+        setPrevMonthMinutes((prev) => prev + total);
+      });
+    });
+
+    return () => {
+      setPrevMonthMinutes(0);
+      unsubs.forEach((u) => u());
+    };
+  }, [projects, monthKey]);
 
   useEffect(() => {
 
@@ -580,6 +621,27 @@ export default function ReportsPage() {
   const filteredAvgPerUser = filteredPeopleCount ? filteredTotalMinutes / filteredPeopleCount : 0;
 
   const filteredAvgPerProject = filteredProjectCount ? filteredTotalMinutes / filteredProjectCount : 0;
+
+  const monthChange = prevMonthMinutes > 0 ? ((filteredTotalMinutes - prevMonthMinutes) / prevMonthMinutes) * 100 : null;
+  const monthChangeTone = monthChange !== null && monthChange < 0 ? "down" : "up";
+
+  const colors = [
+    "rgba(125, 211, 167, 0.9)",
+    "rgba(120, 170, 255, 0.9)",
+    "rgba(251, 191, 36, 0.9)",
+    "rgba(244, 114, 182, 0.9)",
+    "rgba(139, 92, 246, 0.9)",
+  ];
+
+  const chartData = projectStats.slice(0, 5).map((p, i) => ({
+    label: p.name,
+    value: p.minutes,
+    color: colors[i % colors.length],
+  }));
+
+  const top3Projects = projectStats.slice(0, 3);
+  const top3Users = filteredUserTotals.slice(0, 3);
+
   function downloadPdf() {
     if (isPdfLoading) return;
     setIsPdfLoading(true);
@@ -991,39 +1053,50 @@ export default function ReportsPage() {
 
         <div className="panel motion p-5">
 
-          <p className="text-xs uppercase tracking-[0.25em] text-muted">Производство</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs uppercase tracking-[0.25em] text-muted">Производство</p>
+            {monthChange !== null && (
+              <span className={`chip text-xs ${monthChangeTone === "down" ? "bg-rose-400/15 text-rose-200" : "bg-emerald-400/15 text-emerald-200"}`}>
+                {monthChange >= 0 ? "+" : ""}{monthChange.toFixed(1)}%
+              </span>
+            )}
+          </div>
 
           <h3 className="mt-3 text-lg font-semibold">Часы по проектам</h3>
 
           <p className="mt-2 text-sm text-muted">За {monthLabelFromKey(monthKey)}.</p>
 
-          <div className="mt-4 grid gap-2 text-sm">
+          {isLoading ? (
+            <div className="mt-4 text-sm text-muted">Загрузка...</div>
+          ) : (
+            <div className="mt-4 grid gap-2 text-sm">
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
 
-              <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
 
-                <span>Всего часов</span>
+                  <span>Всего часов</span>
 
-                <span className="font-semibold">{formatHours(filteredTotalMinutes)} </span>
+                  <span className="font-semibold">{formatHours(filteredTotalMinutes)} </span>
+
+                </div>
+
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+
+                <div className="flex items-center justify-between">
+
+                  <span>Проектов</span>
+
+                  <span className="font-semibold">{filteredProjectCount}</span>
+
+                </div>
 
               </div>
 
             </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-
-              <div className="flex items-center justify-between">
-
-                <span>Проектов</span>
-
-                <span className="font-semibold">{filteredProjectCount}</span>
-
-              </div>
-
-            </div>
-
-          </div>
+          )}
 
         </div>
 
@@ -1095,6 +1168,83 @@ export default function ReportsPage() {
 
 
 
+      {!isLoading && chartData.length > 0 && (
+        <div className="panel motion p-6">
+          <div className="panel-header">
+            <h2 className="text-lg font-semibold">Распределение часов</h2>
+            <span className="pill">Топ-5</span>
+          </div>
+          <div className="mt-6">
+            <PieChart data={chartData} />
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        {!selectedUserId && top3Projects.length > 0 && (
+          <div className="panel motion p-6">
+            <div className="panel-header">
+              <h2 className="text-lg font-semibold">Топ-3 проектов</h2>
+              <span className="pill">🏆</span>
+            </div>
+            <div className="mt-6 grid gap-3">
+              {top3Projects.map((p, index) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                  style={{ animation: `slide-in-left 0.4s ease-out ${index * 0.1}s both` }}
+                >
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand/20 to-brand/5 text-lg font-bold">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold truncate">{p.name}</div>
+                    <div className="text-xs text-muted">Участников: {p.members}</div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-semibold">{formatHours(p.minutes)} ч</div>
+                    <div className="text-xs text-muted">
+                      {((p.minutes / filteredTotalMinutes) * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!selectedProjectId && top3Users.length > 0 && (
+          <div className="panel motion p-6">
+            <div className="panel-header">
+              <h2 className="text-lg font-semibold">Топ-3 сотрудников</h2>
+              <span className="pill">⭐</span>
+            </div>
+            <div className="mt-6 grid gap-3">
+              {top3Users.map((u, index) => (
+                <div
+                  key={u.userId}
+                  className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                  style={{ animation: `slide-in-right 0.4s ease-out ${index * 0.1}s both` }}
+                >
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent/20 to-accent/5 text-lg font-bold">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0 truncate">
+                    <div className="font-semibold truncate">{u.name}</div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-semibold">{formatHours(u.minutes)} ч</div>
+                    <div className="text-xs text-muted">
+                      {filteredUserTotals.length > 0 ? ((u.minutes / userTotals.reduce((sum, user) => sum + user.minutes, 0)) * 100).toFixed(1) : "0"}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="grid gap-6 xl:grid-cols-2">
 
         <div className="panel motion p-6">
@@ -1104,20 +1254,58 @@ export default function ReportsPage() {
             <span className="pill">{projectStats.length} проектов</span>
           </div>
 
-                    <div className="mt-6 grid gap-3 text-sm">
-            {projectStats.length === 0 && <div className="text-muted">Нет данных за выбранный месяц.</div>}
-            {(selectedUserId ? perUserProjectRows : projectStats).map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <div>
-                  <div className="font-semibold">{p.name}</div>
-                  <div className="text-xs text-muted">Участников: {p.members}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold">{formatHours(p.minutes)} ч</div>
-                </div>
-              </div>
-            ))}
-          </div>        </div>
+          {isLoading ? (
+            <div className="mt-6 text-sm text-muted">Загрузка...</div>
+          ) : (
+            <div className="mt-6 grid gap-3 text-sm">
+              {projectStats.length === 0 && <div className="text-muted">Нет данных за выбранный месяц.</div>}
+              {(selectedUserId ? perUserProjectRows : projectStats).map((p, index) => {
+                const percentage = filteredTotalMinutes > 0 ? ((p.minutes / filteredTotalMinutes) * 100).toFixed(1) : "0";
+                return (
+                  <div key={p.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold truncate">{p.name}</div>
+                      <div className="text-xs text-muted">Участников: {p.members} • {percentage}%</div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="font-semibold">{formatHours(p.minutes)} ч</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="panel motion p-6">
+          <div className="panel-header">
+            <h2 className="text-lg font-semibold">Часы по сотрудникам</h2>
+            <span className="pill">{filteredUserTotals.length} человек</span>
+          </div>
+
+          {isLoading ? (
+            <div className="mt-6 text-sm text-muted">Загрузка...</div>
+          ) : (
+            <div className="mt-6 grid gap-3 text-sm">
+              {filteredUserTotals.length === 0 && <div className="text-muted">Нет данных за выбранный месяц.</div>}
+              {filteredUserTotals.map((u, index) => {
+                const totalUserMinutes = userTotals.reduce((sum, user) => sum + user.minutes, 0);
+                const percentage = totalUserMinutes > 0 ? ((u.minutes / totalUserMinutes) * 100).toFixed(1) : "0";
+                return (
+                  <div key={u.userId} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold truncate">{u.name}</div>
+                      <div className="text-xs text-muted">{percentage}%</div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="font-semibold">{formatHours(u.minutes)} ч</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
     </div>
