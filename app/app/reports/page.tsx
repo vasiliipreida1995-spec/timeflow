@@ -160,6 +160,7 @@ export default function ReportsPage() {
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [prevMonthMinutes, setPrevMonthMinutes] = useState<number>(0);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
 
 
 
@@ -642,12 +643,9 @@ export default function ReportsPage() {
   const top3Projects = projectStats.slice(0, 3);
   const top3Users = filteredUserTotals.slice(0, 3);
 
-  function downloadPdf() {
-    if (isPdfLoading) return;
-    setIsPdfLoading(true);
-    return (async () => {
-      const totalHours = formatHours(filteredTotalMinutes);
-      const peopleCount = filteredPeopleCount;
+  function generatePdfHtml() {
+    const totalHours = formatHours(filteredTotalMinutes);
+    const peopleCount = filteredPeopleCount;
 
       const projectRows = (selectedUserId
         ? perUserProjectRows
@@ -822,7 +820,7 @@ export default function ReportsPage() {
         <style>  :root { color-scheme: light; }
   @page { size: A4; margin: 0; }
   body {
-    font-family: "Roboto", "Segoe UI", "Inter", Tahoma, sans-serif;
+    font-family: "Inter", "Segoe UI", "Roboto", system-ui, sans-serif;
     margin: 0;
     color: #0f172a;
     background: #ffffff;
@@ -831,67 +829,126 @@ export default function ReportsPage() {
     position: relative;
     width: 210mm;
     min-height: 297mm;
-    background: #ffffff;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   }
   .page + .page { page-break-before: always; }
   .header-band {
-    background: #1f2937;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     color: #ffffff;
-    padding: 36px 40px;
+    padding: 40px 44px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header-band::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(125, 211, 167, 0.15), transparent 70%);
+    border-radius: 50%;
   }
   .header-row {
     display: flex;
     align-items: flex-start;
-    gap: 24px;
+    gap: 28px;
+    position: relative;
+    z-index: 1;
   }
   .logo {
-    width: 160px;
-    height: 160px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    width: 140px;
+    height: 140px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(125, 211, 167, 0.2), rgba(125, 211, 167, 0.05));
+    border: 2px solid rgba(125, 211, 167, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 12px;
-    line-height: 1.2;
+    font-size: 11px;
+    line-height: 1.3;
     text-align: center;
-    padding: 8px;
+    padding: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
   }
-  .header-copy { display: flex; flex-direction: column; }
-  .header-title { font-size: 22px; font-weight: 700; }
-  .header-sub { margin-top: 6px; font-size: 13px; color: #cbd5f5; }
-  .content { padding: 36px 40px; }
+  .header-copy { display: flex; flex-direction: column; gap: 4px; }
+  .header-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .header-sub {
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.6;
+  }
+  .content { padding: 40px 44px; }
   .kpi-row {
     display: flex;
     justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 36px;
+    gap: 20px;
+    margin-bottom: 40px;
   }
   .kpi {
-    width: 200px;
-    padding: 18px;
-    border-radius: 14px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    flex: 1;
+    padding: 24px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
-  .kpi-label { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.14em; }
-  .kpi-value { margin-top: 10px; font-size: 20px; font-weight: 700; color: #1f2937; }
-  .table-title { font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 12px; }
-  .table-wrap { border: 1px solid #d8dee8; border-radius: 12px; overflow: hidden; }
+  .kpi-label {
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+  .kpi-value {
+    margin-top: 12px;
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #7dd3a7 0%, #5acb95 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .table-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+  .table-wrap {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   thead th {
     text-align: left;
-    background: #4b5563;
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
     color: #ffffff;
-    font-weight: 600;
-    padding: 10px 12px;
+    font-weight: 700;
+    padding: 14px 16px;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.08em;
   }
-  tbody td { padding: 10px 12px; border-bottom: 1px solid #eef2f7; }
+  tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff;
+  }
+  tbody tr:nth-child(even) td { background: #f8fafc; }
   tbody tr:last-child td { border-bottom: none; }
-  td.value { width: 120px; text-align: right; font-weight: 600; }
-  td.num { width: 44px; text-align: right; color: #64748b; }
+  tbody tr:hover td { background: #f1f5f9; }
+  td.value { width: 120px; text-align: right; font-weight: 700; color: #7dd3a7; }
+  td.num { width: 44px; text-align: right; color: #94a3b8; font-weight: 600; }
   .page--details { padding: 36px; }
   .details-title { font-size: 18px; font-weight: 700; color: #1f2937; }
   .details-meta { margin-top: 6px; font-size: 12px; color: #475569; }
@@ -924,6 +981,20 @@ export default function ReportsPage() {
       </body>
       </html>
     `;
+
+    return { html, documentNumber };
+  }
+
+  function showPreview() {
+    const { html } = generatePdfHtml();
+    setPreviewHtml(html);
+  }
+
+  function downloadPdf() {
+    if (isPdfLoading) return;
+    setIsPdfLoading(true);
+    return (async () => {
+      const { html, documentNumber } = generatePdfHtml();
 
       const token = await auth.currentUser?.getIdToken();
       if (!token) return;
@@ -1154,9 +1225,15 @@ export default function ReportsPage() {
 
             </button>
 
+            <button className="btn btn-outline w-full" onClick={showPreview} disabled={projectStats.length === 0 && userTotals.length === 0}>
+
+             Предпросмотр PDF
+
+            </button>
+
             <button className="btn btn-outline w-full" onClick={downloadPdf} disabled={(projectStats.length === 0 && userTotals.length === 0) || isPdfLoading}>
 
-             Скачать PDF
+             {isPdfLoading ? "Генерация..." : "Скачать PDF"}
 
             </button>
 
@@ -1307,6 +1384,47 @@ export default function ReportsPage() {
           )}
         </div>
       </div>
+
+      {previewHtml && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setPreviewHtml(null)}
+        >
+          <div
+            className="relative h-full w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4">
+              <h3 className="text-lg font-semibold text-gray-900">Предпросмотр PDF</h3>
+              <div className="flex gap-2">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setPreviewHtml(null);
+                    downloadPdf();
+                  }}
+                >
+                  Скачать PDF
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setPreviewHtml(null)}
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+            <div className="h-[calc(100%-4rem)] overflow-auto bg-gray-100 p-8">
+              <iframe
+                srcDoc={previewHtml}
+                className="mx-auto h-full w-full rounded-lg bg-white shadow-lg"
+                style={{ minHeight: "1000px" }}
+                title="PDF Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
 
