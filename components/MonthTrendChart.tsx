@@ -67,14 +67,40 @@ export default function MonthTrendChart({ data }: MonthTrendChartProps) {
         })}
 
         {/* Area */}
-        <path d={areaD} fill="url(#areaGradient)" />
+        <path
+          d={areaD}
+          fill="url(#areaGradient)"
+          style={{
+            animation: "fadeIn 0.8s ease-out forwards",
+          }}
+        />
 
         {/* Line */}
-        <path d={pathD} fill="none" stroke="rgba(125,211,167,0.8)" strokeWidth="2" />
+        <path
+          d={pathD}
+          fill="none"
+          stroke="rgba(125,211,167,0.8)"
+          strokeWidth="2"
+          strokeDasharray="1000"
+          strokeDashoffset="1000"
+          style={{
+            animation: "drawLine 1.5s ease-out forwards",
+          }}
+        />
 
         {/* Points */}
         {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="3" fill="rgba(125,211,167,1)" />
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r="3"
+            fill="rgba(125,211,167,1)"
+            style={{
+              opacity: 0,
+              animation: `fadeInPoint 0.4s ease-out ${0.3 + i * 0.1}s forwards`,
+            }}
+          />
         ))}
 
         {/* Y-axis labels */}
