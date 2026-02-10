@@ -49,6 +49,7 @@ export default function ProjectsPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"date" | "members">("date");
 
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
@@ -264,6 +265,22 @@ export default function ProjectsPage() {
           <span className="chip">{projects.length}</span>
         </div>
 
+        <div className="mt-4 flex items-center gap-3">
+          <span className="text-sm text-muted">Сортировка:</span>
+          <button
+            className={`btn btn-sm ${sortBy === "date" ? "btn-primary" : "btn-outline"}`}
+            onClick={() => setSortBy("date")}
+          >
+            По дате
+          </button>
+          <button
+            className={`btn btn-sm ${sortBy === "members" ? "btn-primary" : "btn-outline"}`}
+            onClick={() => setSortBy("members")}
+          >
+            По участникам
+          </button>
+        </div>
+
         {loading && <div className="mt-4 text-sm text-muted">Загрузка...</div>}
 
         {!loading && projects.length === 0 && (
@@ -271,7 +288,16 @@ export default function ProjectsPage() {
         )}
 
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          {projects.map((project) => (
+          {[...projects]
+            .sort((a, b) => {
+              if (sortBy === "members") {
+                const countA = projectMemberCounts[a.id] ?? 0;
+                const countB = projectMemberCounts[b.id] ?? 0;
+                return countB - countA;
+              }
+              return 0;
+            })
+            .map((project) => (
             <div key={project.id} className="panel motion p-5">
               <div className="flex items-start justify-between">
                 <div>
