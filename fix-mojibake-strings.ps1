@@ -8,66 +8,71 @@ if (!(Test-Path $Path)) {
   exit 1
 }
 
-# backup
-$stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$backup = "$Path.bak_mojibake_$stamp"
+$stamp  = Get-Date -Format "yyyyMMdd_HHmmss"
+$backup = "$Path.bak_moj_$stamp"
 Copy-Item $Path $backup -Force
 
-# read as UTF-8 (raw)
+# читаем как UTF-8 (как лежит в репе)
 $src = Get-Content -LiteralPath $Path -Raw -Encoding UTF8
 
-function Convert-Mojibake([string]$s) {
-  # Популярный случай: UTF-8 байты были прочитаны как CP1251 и попали в строку.
+function Score([string]$s) {
+  $cyr = ([regex]::Matches($s, "[А-Яа-яЁё]")).Count
+  $bad = ([regex]::Matches($s, "(Р.|С.|Ð.|Ñ.)")).Count
+  $nonAscii = 0
+  foreach ($ch in $s.ToCharArray()) {
+    if ([int]$ch -gt 127) { $nonAscii++ }
+  }
+  # больше кириллицы и юникода, меньше "Р…/С…/Ð…/Ñ…"
+  return ($cyr * 6) + $nonAscii - ($bad * 10)
+}
+
+function TryConvert([string]$s, [int]$codepage) {
   try {
-    $bytes = [System.Text.Encoding]::GetEncoding(1251).GetBytes($s)
+    $bytes = [System.Text.Encoding]::GetEncoding($codepage).GetBytes($s)
     $fixed = [System.Text.Encoding]::UTF8.GetString($bytes)
 
-    # эвристика: стало больше кириллицы и исчезли типичные "Р"/"С" пачки
-    $cyrBefore = ([regex]::Matches($s, "[А-Яа-яЁё]")).Count
-    $cyrAfter  = ([regex]::Matches($fixed, "[А-Яа-яЁё]")).Count
-
-    $badBefore = ([regex]::Matches($s, "(Р.|С.|Ð.|Ñ.)")).Count
-    $badAfter  = ([regex]::Matches($fixed, "(Р.|С.|Ð.|Ñ.)")).Count
-
-    if ($cyrAfter -ge ($cyrBefore + 2) -and $badAfter -lt $badBefore) {
-      return $fixed
-    }
-
-    return $s
+    # если появились "�" — значит декод неудачный
+    if ($fixed.Contains([char]0xFFFD)) { return $null }
+    return $fixed
   } catch {
-    return $s
+    return $null
   }
 }
 
-# regex по строковым литералам: "..." | '...' | `...`
-$pattern = '(?s)(`(?:\\`|[^`])*`)|("(?:(?:\\.)|[^"\\])*")|(\'(?:(?:\\.)|[^\'\\])*\')'
+function FixChunk([string]$chunk) {
+  # пробуем самые частые варианты
+  $best = $chunk
+  $bestScore = Score $chunk
 
-$changed = 0
-
-$out = [regex]::Replace($src, $pattern, {
-  param($m)
-
-  $token = $m.Value
-  if ($token.Length -lt 2) { return $token }
-
-  $quote = $token.Substring(0,1)
-  $inner = $token.Substring(1, $token.Length-2)
-
-  # трогаем только если похоже на mojibake
-  if ($inner -notmatch '(Р.|С.|Ð.|Ñ.)') { return $token }
-
-  $fixedInner = Convert-Mojibake $inner
-  if ($fixedInner -ne $inner) {
-    $script:changed++
-    return $quote + $fixedInner + $quote
+  foreach ($cp in @(1251, 1252, 28591)) { # 1251=cp1251, 1252=cp1252, 28591=latin1
+    $cand = TryConvert $chunk $cp
+    if ($null -eq $cand) { continue }
+    $sc = Score $cand
+    if ($sc -gt $bestScore) {
+      $best = $cand
+      $bestScore = $sc
+    }
   }
 
-  return $token
+  return $best
+}
+
+# Матчим "подозрительные" подрядки с типичными маркерами mojibake:
+# Р?, С?, Ð?, Ñ? (минимум 6 символов, чтобы не цеплять случайное)
+$pattern = "(?:Р.|С.|Ð.|Ñ.){3,}"
+
+$changed = 0
+$out = [regex]::Replace($src, $pattern, {
+  param($m)
+  $orig = $m.Value
+  $fixed = FixChunk $orig
+  if ($fixed -ne $orig) { $script:changed++ }
+  return $fixed
 })
 
-# write back UTF-8 without BOM
+# Записываем UTF-8 без BOM
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($Path, $out, $utf8NoBom)
 
-Write-Host "OK. Strings fixed: $changed"
+Write-Host "OK: fixed $changed chunk(s)."
 Write-Host "Backup: $backup"
