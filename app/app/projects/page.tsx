@@ -253,7 +253,6 @@ export default function ProjectsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-lg font-semibold">{project.name ?? "Без названия"}</p>
-                  <p className="text-xs text-muted">ID: {project.id}</p>
                 </div>
                 <span className="pill">active</span>
               </div>
