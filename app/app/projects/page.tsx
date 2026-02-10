@@ -43,6 +43,7 @@ export default function ProjectsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
+  const [projectMemberCounts, setProjectMemberCounts] = useState<Record<string, number>>({});
 
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -118,6 +119,28 @@ export default function ProjectsPage() {
       }
     );
   }, [selectedProjectId]);
+
+  useEffect(() => {
+    if (projects.length === 0) return;
+
+    const unsubscribes = projects.map((project) => {
+      const q = query(
+        collection(db, "project_members"),
+        where("projectId", "==", project.id)
+      );
+
+      return safeOnSnapshot(q, (snap) => {
+        setProjectMemberCounts((prev) => ({
+          ...prev,
+          [project.id]: snap.docs.length,
+        }));
+      });
+    });
+
+    return () => {
+      unsubscribes.forEach((unsub) => unsub?.());
+    };
+  }, [projects]);
 
   async function createProject() {
     const cleanName = name.trim();
@@ -253,6 +276,9 @@ export default function ProjectsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-lg font-semibold">{project.name ?? "Без названия"}</p>
+                  <p className="text-xs text-muted mt-1">
+                    Участников: {projectMemberCounts[project.id] ?? 0}
+                  </p>
                 </div>
                 <span className="pill">active</span>
               </div>
