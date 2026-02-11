@@ -17,6 +17,7 @@ import PieChart from "../../../components/PieChart";
 
 
 
+
 type Project = { id: string; name?: string | null };
 
 type ProjectDoc = { name?: string | null };
@@ -643,7 +644,7 @@ export default function ReportsPage() {
   const top3Projects = projectStats.slice(0, 3);
   const top3Users = filteredUserTotals.slice(0, 3);
 
-  function generatePdfHtml() {
+  async function generatePdfHtml() {
     const totalHours = formatHours(filteredTotalMinutes);
     const peopleCount = filteredPeopleCount;
 
@@ -693,23 +694,27 @@ export default function ReportsPage() {
       // Generate report URL for QR code
       const reportUrl = `https://app.timeflow.com/reports?month=${monthKey}&project=${selectedProjectId || 'all'}&user=${selectedUserId || 'all'}`;
 
-      // Generate QR code SVG using simple encoding
-      const qrCodeSvg = `<svg viewBox="0 0 33 33" xmlns="http://www.w3.org/2000/svg">
-        <rect width="33" height="33" fill="white"/>
-        <g fill="black">
-          <rect x="0" y="0" width="7" height="7"/><rect x="2" y="2" width="3" height="3" fill="white"/>
-          <rect x="26" y="0" width="7" height="7"/><rect x="28" y="2" width="3" height="3" fill="white"/>
-          <rect x="0" y="26" width="7" height="7"/><rect x="2" y="28" width="3" height="3" fill="white"/>
-          <rect x="8" y="1" width="1" height="1"/><rect x="10" y="1" width="1" height="1"/>
-          <rect x="12" y="1" width="1" height="1"/><rect x="14" y="1" width="1" height="1"/>
-          <rect x="16" y="1" width="1" height="1"/><rect x="18" y="1" width="1" height="1"/>
-          <rect x="20" y="1" width="1" height="1"/><rect x="22" y="1" width="1" height="1"/>
-          <rect x="9" y="9" width="15" height="15" fill="white"/>
-          <rect x="10" y="10" width="13" height="13"/>
-          <rect x="12" y="12" width="9" height="9" fill="white"/>
-          <rect x="14" y="14" width="5" height="5"/>
-        </g>
-      </svg>`;
+      // Fetch QR code as data URL for PDF compatibility
+      const qrCodeUrl = `${window.location.origin}/api/qr?format=dataurl&data=${encodeURIComponent(reportUrl)}`;
+      let qrCodeImage = '';
+      try {
+        const qrResponse = await fetch(qrCodeUrl);
+        if (qrResponse.ok) {
+          const dataUrl = await qrResponse.text();
+          qrCodeImage = `<img src="${dataUrl}" alt="QR Code" />`;
+          console.log('QR code generated successfully, data URL length:', dataUrl.length);
+        } else {
+          console.error('QR fetch failed:', qrResponse.status);
+        }
+      } catch (e) {
+        console.error('Failed to fetch QR code:', e);
+      }
+
+      // Fallback: if QR failed, show placeholder
+      if (!qrCodeImage) {
+        console.warn('Using QR placeholder');
+        qrCodeImage = `<div style="width: 100%; height: 100%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 10px;">QR</div>`;
+      }
 
       const generationDate = new Date().toLocaleString('ru-RU', {
         day: '2-digit',
@@ -732,7 +737,7 @@ export default function ReportsPage() {
               ${personLabel ? `<div class="header-sub">Сотрудник: ${escapeHtml(String(personLabel))}</div>` : ""}
             </div>
             <div class="qr-code">
-              ${qrCodeSvg}
+              ${qrCodeImage}
               <div class="qr-label">Онлайн отчет</div>
             </div>
           </div>
@@ -960,7 +965,8 @@ export default function ReportsPage() {
     flex-shrink: 0;
   }
 
-  .qr-code svg {
+  .qr-code svg,
+  .qr-code img {
     width: 100px;
     height: 100px;
     border-radius: 12px;
@@ -1231,8 +1237,8 @@ export default function ReportsPage() {
     return { html, documentNumber };
   }
 
-  function showPreview() {
-    const { html } = generatePdfHtml();
+  async function showPreview() {
+    const { html } = await generatePdfHtml();
     setPreviewHtml(html);
   }
 
@@ -1240,7 +1246,7 @@ export default function ReportsPage() {
     if (isPdfLoading) return;
     setIsPdfLoading(true);
     return (async () => {
-      const { html, documentNumber } = generatePdfHtml();
+      const { html, documentNumber } = await generatePdfHtml();
 
       const token = await auth.currentUser?.getIdToken();
       if (!token) return;
