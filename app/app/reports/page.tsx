@@ -690,6 +690,35 @@ export default function ReportsPage() {
       const tableTitle = isUserReport ? "Проекты" : "Сотрудники";
       const tableRows = isUserReport ? projectRows : peopleRows;
 
+      // Generate report URL for QR code
+      const reportUrl = `https://app.timeflow.com/reports?month=${monthKey}&project=${selectedProjectId || 'all'}&user=${selectedUserId || 'all'}`;
+
+      // Generate QR code SVG using simple encoding
+      const qrCodeSvg = `<svg viewBox="0 0 33 33" xmlns="http://www.w3.org/2000/svg">
+        <rect width="33" height="33" fill="white"/>
+        <g fill="black">
+          <rect x="0" y="0" width="7" height="7"/><rect x="2" y="2" width="3" height="3" fill="white"/>
+          <rect x="26" y="0" width="7" height="7"/><rect x="28" y="2" width="3" height="3" fill="white"/>
+          <rect x="0" y="26" width="7" height="7"/><rect x="2" y="28" width="3" height="3" fill="white"/>
+          <rect x="8" y="1" width="1" height="1"/><rect x="10" y="1" width="1" height="1"/>
+          <rect x="12" y="1" width="1" height="1"/><rect x="14" y="1" width="1" height="1"/>
+          <rect x="16" y="1" width="1" height="1"/><rect x="18" y="1" width="1" height="1"/>
+          <rect x="20" y="1" width="1" height="1"/><rect x="22" y="1" width="1" height="1"/>
+          <rect x="9" y="9" width="15" height="15" fill="white"/>
+          <rect x="10" y="10" width="13" height="13"/>
+          <rect x="12" y="12" width="9" height="9" fill="white"/>
+          <rect x="14" y="14" width="5" height="5"/>
+        </g>
+      </svg>`;
+
+      const generationDate = new Date().toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
       const pageHtml = `
       <div class="page">
         <div class="header-band">
@@ -701,6 +730,10 @@ export default function ReportsPage() {
               <div class="header-sub">Документ № ${documentNumber}</div>
               <div class="header-sub">${escapeHtml(monthLabelFromKey(monthKey))}</div>
               ${personLabel ? `<div class="header-sub">Сотрудник: ${escapeHtml(String(personLabel))}</div>` : ""}
+            </div>
+            <div class="qr-code">
+              ${qrCodeSvg}
+              <div class="qr-label">Онлайн отчет</div>
             </div>
           </div>
         </div>
@@ -730,6 +763,10 @@ export default function ReportsPage() {
               </tbody>
             </table>
           </div>
+        </div>
+        <div class="page-footer">
+          <div class="generation-date">Сформировано: ${generationDate}</div>
+          <div class="page-number">Страница 1 из 2</div>
         </div>
       </div>
     `;
@@ -806,6 +843,10 @@ export default function ReportsPage() {
             <div class="sign-name">${escapeHtml(String(companyLabel))}</div>
           </div>
           <div class="stamp">М.П.</div>
+        </div>
+        <div class="page-footer">
+          <div class="generation-date">Сформировано: ${generationDate}</div>
+          <div class="page-number">Страница 2 из 2</div>
         </div>
       </div>
       `
@@ -909,6 +950,31 @@ export default function ReportsPage() {
     flex-direction: column;
     gap: 8px;
     flex: 1;
+  }
+
+  .qr-code {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .qr-code svg {
+    width: 100px;
+    height: 100px;
+    border-radius: 12px;
+    background: white;
+    padding: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .qr-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
   }
 
   .header-title {
@@ -1130,6 +1196,29 @@ export default function ReportsPage() {
     color: #d4d4d4;
     font-size: 18px;
     font-weight: 600;
+  }
+
+  /* Footer */
+  .page-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 48px;
+    background: linear-gradient(to top, rgba(250, 250, 250, 0.95), transparent);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #a3a3a3;
+  }
+
+  .page-number {
+    font-weight: 600;
+  }
+
+  .generation-date {
+    font-weight: 500;
   }</style>
       </head>
       <body>
