@@ -2,6 +2,9 @@
     "name": "web",
     "version": "0.1.0",
     "private": true,
+    "engines": {
+        "node": ">=18.0.0"
+    },
     "scripts": {
         "dev": "next dev",
         "build": "next build",
@@ -21,6 +24,7 @@
         "mysql2": "^3.16.3",
         "next": "16.1.6",
         "puppeteer": "^22.15.0",
+        "qrcode": "^1.5.4",
         "react": "19.2.3",
         "react-dom": "19.2.3",
         "ws": "^8.19.0"
@@ -28,6 +32,7 @@
     "devDependencies": {
         "@tailwindcss/postcss": "^4",
         "@types/node": "^20",
+        "@types/qrcode": "^1.5.5",
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "eslint": "^9",
